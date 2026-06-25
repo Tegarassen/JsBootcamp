@@ -1,0 +1,2639 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Intro to Modern JavaScript — Spoon Consulting Bootcamp</title>
+<style>
+  :root {
+    --bg: #0c1828;
+    --surface: #112236;
+    --surface2: #1a2f4a;
+    --border: #253d5c;
+    --accent: #E8B84B;
+    --accent2: #a8b8ff;
+    --accent3: #6dd4dc;
+    --danger: #c44570;
+    --text: #eef2f8;
+    --text-muted: #6b88a8;
+    --code-bg: #091422;
+    --keyword: #e8709a;
+    --string: #8fe0c8;
+    --number: #E8B84B;
+    --comment: #4a6a88;
+    --func: #a8c8ff;
+    --op: #E8B84B;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+  /* SIDEBAR */
+  #sidebar {
+    width: 260px; min-width: 260px; background: var(--surface); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; overflow-y: auto;
+  }
+  .sidebar-header {
+    padding: 18px 18px 14px; border-bottom: 1px solid var(--border);
+    background: #091422;
+  }
+  .sidebar-header .logo { display: flex; align-items: center; gap: 0; margin-bottom: 8px; }
+  .sidebar-header h2 { font-size: 13px; font-weight: 700; color: var(--text-muted); }
+  .sidebar-header p { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+
+  .progress-bar-wrap { padding: 12px 18px; border-bottom: 1px solid var(--border); }
+  .progress-label { font-size: 11px; color: var(--text-muted); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .progress-track { height: 5px; background: var(--border); border-radius: 99px; overflow: hidden; }
+  .progress-fill { height: 100%; background: linear-gradient(90deg, #E8B84B, #6dd4dc); border-radius: 99px; transition: width 0.4s ease; }
+
+  .nav-section { padding: 8px 0; }
+  .nav-label { font-size: 10px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: .08em; padding: 6px 18px 4px; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px; padding: 9px 18px; cursor: pointer;
+    font-size: 13px; color: var(--text-muted); transition: all 0.15s; border-left: 3px solid transparent;
+    position: relative;
+  }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--surface2); color: var(--accent); border-left-color: var(--accent); }
+  .nav-item.done .check { color: var(--accent3); }
+  .nav-item .icon { font-size: 16px; width: 20px; text-align: center; }
+  .nav-item .check { margin-left: auto; font-size: 13px; color: var(--border); }
+
+  /* MAIN */
+  #main { flex: 1; overflow-y: auto; display: flex; flex-direction: column; }
+  .module { display: none; padding: 40px 48px; max-width: 900px; margin: 0 auto; width: 100%; }
+  .module.active { display: block; }
+
+  .module-header { margin-bottom: 32px; }
+  .module-badge { display: inline-block; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #E8B84B; background: rgba(232,184,75,.12); padding: 3px 10px; border-radius: 99px; margin-bottom: 10px; }
+  .module-title { font-size: 30px; font-weight: 800; color: var(--text); line-height: 1.2; }
+  .module-sub { font-size: 15px; color: var(--text-muted); margin-top: 8px; line-height: 1.6; }
+
+  /* SECTIONS */
+  .section { margin-bottom: 36px; }
+  .section h3 { font-size: 17px; font-weight: 700; color: var(--text); margin-bottom: 12px; display: flex; align-items: center; gap-8px; }
+  .section p { font-size: 14px; color: #bbc0d8; line-height: 1.7; margin-bottom: 10px; }
+
+  /* CODE BLOCK */
+  .code-block { background: var(--code-bg); border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin: 14px 0; }
+  .code-header { display: flex; align-items: center; justify-content: space-between; padding: 8px 14px; background: rgba(255,255,255,.03); border-bottom: 1px solid var(--border); }
+  .code-title { font-size: 12px; color: var(--text-muted); font-family: monospace; }
+  .run-btn { background: var(--accent3); color: #0f1117; border: none; padding: 4px 12px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; transition: opacity .15s; }
+  .run-btn:hover { opacity: .85; }
+  .code-body { padding: 16px; font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace; font-size: 13px; line-height: 1.7; overflow-x: auto; white-space: pre; }
+  .code-output { padding: 10px 16px; background: rgba(62,207,142,.05); border-top: 1px solid rgba(62,207,142,.15); font-family: monospace; font-size: 13px; color: var(--accent3); display: none; white-space: pre-wrap; }
+  .code-output.error { background: rgba(240,106,106,.05); border-top-color: rgba(240,106,106,.2); color: var(--danger); }
+  .code-output.show { display: block; }
+
+  /* SYNTAX COLORS */
+  .kw { color: var(--keyword); }
+  .str { color: var(--string); }
+  .num { color: var(--number); }
+  .cmt { color: var(--comment); font-style: italic; }
+  .fn { color: var(--func); }
+  .op { color: var(--op); }
+  .var { color: #e8eaf6; }
+  .prop { color: #f9a8d4; }
+
+  /* COMPARISON TABLE */
+  .compare-grid { display: grid; gap: 12px; margin: 14px 0; }
+  .compare-grid.cols-2 { grid-template-columns: 1fr 1fr; }
+  .compare-grid.cols-3 { grid-template-columns: 1fr 1fr 1fr; }
+  .compare-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; }
+  .compare-card.highlight { border-color: var(--accent3); }
+  .compare-card.warn { border-color: var(--danger); }
+  .compare-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 8px; }
+  .compare-card h4.green { color: var(--accent3); }
+  .compare-card h4.yellow { color: var(--accent); }
+  .compare-card h4.red { color: var(--danger); }
+  .compare-card ul { padding-left: 16px; }
+  .compare-card li { font-size: 13px; color: #bbc0d8; margin-bottom: 4px; line-height: 1.5; }
+  .compare-card p { font-size: 13px; color: #bbc0d8; margin-bottom: 4px; }
+
+  /* VISUAL DIAGRAM */
+  .diagram { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 14px 0; }
+  .scope-vis { display: flex; gap: 12px; justify-content: center; align-items: stretch; flex-wrap: wrap; }
+  .scope-box { border: 2px dashed; border-radius: 8px; padding: 12px 16px; min-width: 140px; text-align: center; }
+  .scope-box.global { border-color: #a8b8ff; }
+  .scope-box.func { border-color: #E8B84B; }
+  .scope-box.block { border-color: #6dd4dc; }
+  .scope-box .scope-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+  .scope-box.global .scope-label { color: #a8b8ff; }
+  .scope-box.func .scope-label { color: #E8B84B; }
+  .scope-box.block .scope-label { color: #6dd4dc; }
+  .var-tag { display: inline-block; font-family: monospace; font-size: 12px; padding: 3px 8px; border-radius: 5px; margin: 3px; }
+  .var-tag.v { background: rgba(240,106,106,.15); color: var(--danger); }
+  .var-tag.l { background: rgba(247,201,72,.15); color: var(--accent); }
+  .var-tag.c { background: rgba(62,207,142,.15); color: var(--accent3); }
+
+  /* QUIZ */
+  .quiz-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; padding: 20px; margin: 16px 0; }
+  .quiz-card h4 { font-size: 15px; font-weight: 700; margin-bottom: 14px; color: var(--text); }
+  .quiz-options { display: flex; flex-direction: column; gap: 8px; }
+  .quiz-opt { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; cursor: pointer; font-size: 13px; color: var(--text-muted); transition: all .15s; font-family: monospace; }
+  .quiz-opt:hover { border-color: var(--accent2); color: var(--text); }
+  .quiz-opt.correct { border-color: var(--accent3); background: rgba(62,207,142,.1); color: var(--accent3); }
+  .quiz-opt.wrong { border-color: var(--danger); background: rgba(240,106,106,.08); color: var(--danger); }
+  .quiz-feedback { margin-top: 12px; font-size: 13px; padding: 10px 14px; border-radius: 8px; display: none; }
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.ok { background: rgba(62,207,142,.1); color: var(--accent3); border: 1px solid rgba(62,207,142,.2); }
+  .quiz-feedback.fail { background: rgba(240,106,106,.08); color: var(--danger); border: 1px solid rgba(240,106,106,.2); }
+
+  /* INTERACTIVE PLAYGROUND */
+  .playground { background: var(--code-bg); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; margin: 14px 0; }
+  .playground-header { padding: 10px 16px; background: rgba(232,184,75,.05); border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .playground-header span { font-size: 13px; font-weight: 600; color: #E8B84B; }
+  textarea.playground-code {
+    width: 100%; padding: 14px 16px; font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 13px;
+    background: transparent; color: var(--text); border: none; outline: none; resize: vertical; min-height: 100px;
+    line-height: 1.7;
+  }
+  .playground-run { background: #E8B84B; color: #0c1828; border: none; margin: 0 16px 12px; padding: 8px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 700; transition: opacity .15s; }
+  .playground-run:hover { opacity: .85; }
+  .playground-out { padding: 12px 16px; border-top: 1px solid var(--border); font-family: monospace; font-size: 13px; min-height: 40px; color: var(--accent3); white-space: pre-wrap; }
+
+  /* PROMISE VISUAL */
+  .promise-flow { display: flex; align-items: center; gap: 0; margin: 16px 0; flex-wrap: wrap; }
+  .promise-state { padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 700; text-align: center; min-width: 90px; }
+  .promise-state.pending { background: rgba(232,184,75,.15); color: #E8B84B; border: 2px solid rgba(232,184,75,.35); }
+  .promise-state.resolved { background: rgba(109,212,220,.15); color: #6dd4dc; border: 2px solid rgba(109,212,220,.35); }
+  .promise-state.rejected { background: rgba(196,69,112,.12); color: #e07090; border: 2px solid rgba(196,69,112,.3); }
+  .promise-arrow { padding: 0 10px; color: var(--text-muted); font-size: 18px; }
+  .promise-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); margin-top: 4px; }
+
+  /* PILLS / BADGES */
+  .pill { display: inline-block; font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 99px; margin-right: 4px; }
+  .pill.blue { background: rgba(168,184,255,.18); color: #a8b8ff; }
+  .pill.green { background: rgba(109,212,220,.15); color: #6dd4dc; }
+  .pill.yellow { background: rgba(232,184,75,.15); color: #E8B84B; }
+  .pill.red { background: rgba(196,69,112,.15); color: #e07090; }
+
+  /* CALLOUT */
+  .callout { border-left: 3px solid; padding: 12px 16px; border-radius: 0 8px 8px 0; margin: 12px 0; font-size: 13px; line-height: 1.6; }
+  .callout.tip { border-color: #6dd4dc; background: rgba(109,212,220,.06); color: #a8e8ec; }
+  .callout.warn { border-color: #E8B84B; background: rgba(232,184,75,.06); color: #f0d080; }
+  .callout.info { border-color: #a8b8ff; background: rgba(168,184,255,.06); color: #d4dcff; }
+
+  /* NAV FOOTER */
+  .module-nav { display: flex; justify-content: space-between; margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border); }
+  .nav-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); padding: 10px 20px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; }
+  .nav-btn:hover { border-color: var(--accent2); color: var(--text); }
+  .nav-btn.primary { background: #E8B84B; border-color: #E8B84B; color: #0c1828; font-weight: 700; }
+  .nav-btn.primary:hover { opacity: .9; }
+  .nav-btn:disabled { opacity: .3; cursor: default; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+
+  /* TYPE VISUAL */
+  .type-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin: 14px 0; }
+  .type-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 16px; text-align: center; }
+  .type-card .type-icon { font-size: 28px; margin-bottom: 8px; }
+  .type-card h4 { font-size: 14px; font-weight: 700; margin-bottom: 6px; }
+  .type-card .type-val { font-family: monospace; font-size: 12px; color: var(--text-muted); background: var(--code-bg); padding: 3px 8px; border-radius: 5px; margin: 2px; display: inline-block; }
+
+  /* LOOP ANIMATED */
+  .loop-demo { background: var(--surface2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin: 14px 0; text-align: center; }
+  .loop-steps { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+  .step-box { background: var(--surface); border: 2px solid var(--border); border-radius: 8px; padding: 8px 14px; font-family: monospace; font-size: 13px; color: var(--text-muted); transition: all .3s; min-width: 70px; text-align: center; }
+  .step-box.active { border-color: var(--accent2); color: var(--accent2); background: rgba(92,110,248,.1); transform: scale(1.05); }
+  .step-box.done-step { border-color: var(--accent3); color: var(--accent3); }
+
+  /* SCOPE INTERACTIVE */
+  .scope-toggle { display: flex; gap: 10px; margin: 12px 0; }
+  .scope-btn { background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted); padding: 6px 14px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: all .15s; }
+  .scope-btn.active { border-color: var(--accent2); color: var(--accent2); }
+  .scope-view { display: none; }
+  .scope-view.active { display: block; }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    #sidebar { display: none; }
+    .module { padding: 24px 20px; }
+    .compare-grid.cols-2, .compare-grid.cols-3 { grid-template-columns: 1fr; }
+    .type-grid { grid-template-columns: 1fr 1fr; }
+  }
+
+  /* INTRO CARD */
+  .intro-hero { background: linear-gradient(135deg, #091422 0%, #0f1f35 100%); border: 1px solid var(--border); border-radius: 14px; padding: 32px; margin-bottom: 32px; text-align: center; }
+  .intro-hero .hero-title { font-size: 42px; font-weight: 900; background: linear-gradient(135deg, #E8B84B, #f0d080); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+  .intro-hero p { font-size: 15px; color: var(--text-muted); margin-top: 10px; max-width: 500px; margin-left: auto; margin-right: auto; line-height: 1.7; }
+  .topics-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 24px; }
+  .topic-chip { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 14px; text-align: left; cursor: pointer; transition: all .15s; }
+  .topic-chip:hover { border-color: var(--accent2); }
+  .topic-chip .tc-num { font-size: 11px; color: var(--text-muted); margin-bottom: 3px; }
+  .topic-chip .tc-name { font-size: 13px; font-weight: 600; color: var(--text); }
+
+  /* CLASSES DIAGRAM */
+  .class-diagram { display: flex; flex-direction: column; align-items: center; gap: 0; margin: 16px 0; }
+  .class-box { background: var(--surface2); border: 2px solid var(--border); border-radius: 10px; width: 220px; }
+  .class-box .class-name { background: #7a1840; color: white; font-weight: 700; font-size: 14px; padding: 8px 14px; border-radius: 8px 8px 0 0; text-align: center; }
+  .class-box .class-body { padding: 10px 14px; font-family: monospace; font-size: 12px; color: var(--text-muted); }
+  .class-box .class-body div { margin: 2px 0; }
+  .class-arrow { font-size: 22px; color: var(--accent3); margin: 4px 0; }
+  .extends-label { font-size: 11px; color: var(--accent3); font-weight: 700; }
+
+  /* MODULE METHODS */
+  .method-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 12px 0; }
+  .method-item { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; }
+  .method-item code { font-size: 12px; color: var(--accent); font-family: monospace; display: block; margin-bottom: 4px; }
+  .method-item p { font-size: 12px; color: var(--text-muted); }
+
+  /* SPREAD VISUAL */
+  .spread-vis { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 12px 0; }
+  .arr-box { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; font-family: monospace; font-size: 13px; color: var(--text); }
+  .spread-op { font-size: 20px; color: var(--accent); font-weight: 900; }
+  .arr-result { background: rgba(62,207,142,.1); border: 1px solid rgba(62,207,142,.3); border-radius: 8px; padding: 8px 12px; font-family: monospace; font-size: 13px; color: var(--accent3); }
+
+  /* ═══ PLAYGROUND ══════════════════════════════════════════════════════════ */
+  #mod-playground.active { display: flex !important; }
+
+  #pg-shell {
+    display: flex; flex-direction: column; height: 100vh; width: 100%;
+    background: var(--bg); overflow: hidden;
+  }
+
+  /* TOP BAR */
+  #pg-topbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 20px; background: #091422;
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  #pg-topbar-left { display: flex; align-items: center; gap: 12px; }
+  #pg-logo { font-size: 22px; }
+  #pg-title { font-size: 15px; font-weight: 700; color: var(--text); }
+  #pg-subtitle { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
+  #pg-topbar-right { display: flex; align-items: center; gap: 8px; }
+
+  .pg-btn { border-radius: 7px; cursor: pointer; font-size: 13px; font-weight: 600; padding: 7px 14px; border: 1px solid; transition: all .15s; }
+  .pg-btn-ghost { background: transparent; border-color: var(--border); color: var(--text-muted); }
+  .pg-btn-ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .pg-btn-run { background: #E8B84B; border-color: #E8B84B; color: #091422; font-weight: 700; }
+  .pg-btn-run:hover { background: #f0ca60; }
+  .pg-btn-sm { font-size: 11px; padding: 4px 10px; }
+  .pg-btn-run kbd { font-size: 10px; opacity: .7; margin-left: 6px; background: rgba(0,0,0,.2); padding: 1px 4px; border-radius: 4px; font-family: monospace; }
+
+  /* PRESETS */
+  #pg-presets {
+    display: flex; align-items: center; gap: 6px; padding: 8px 20px;
+    background: var(--surface); border-bottom: 1px solid var(--border);
+    flex-shrink: 0; overflow-x: auto; flex-wrap: nowrap;
+  }
+  #pg-preset-label { font-size: 11px; color: var(--text-muted); white-space: nowrap; margin-right: 4px; flex-shrink: 0; }
+  .pg-chip {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+    padding: 4px 12px; border-radius: 99px; font-size: 12px; font-weight: 600;
+    cursor: pointer; transition: all .15s; white-space: nowrap; flex-shrink: 0;
+  }
+  .pg-chip:hover { border-color: #E8B84B; color: #E8B84B; }
+  .pg-chip-challenge { border-color: rgba(196,69,112,.4); color: #e07090; }
+  .pg-chip-challenge:hover { border-color: #e07090; background: rgba(196,69,112,.1); color: #f090b0; }
+
+  /* SPLIT */
+  #pg-split {
+    display: flex; flex: 1; overflow: hidden; min-height: 0;
+  }
+
+  /* PANES */
+  #pg-editor-pane, #pg-output-pane {
+    display: flex; flex-direction: column; overflow: hidden;
+  }
+  #pg-editor-pane { flex: 1.1; border-right: 1px solid var(--border); }
+  #pg-output-pane { flex: 0.9; }
+
+  .pg-pane-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 7px 14px; background: rgba(255,255,255,.02);
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  .pg-pane-title { font-size: 12px; color: var(--text-muted); font-weight: 600; font-family: monospace; }
+
+  /* EDITOR */
+  #pg-editor-wrap {
+    display: flex; flex: 1; overflow: hidden; background: var(--code-bg);
+  }
+  #pg-line-nums {
+    padding: 14px 0 14px 10px; min-width: 38px; text-align: right;
+    font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 13px;
+    line-height: 1.7; color: #334; background: var(--code-bg);
+    border-right: 1px solid var(--border); user-select: none;
+    overflow: hidden; flex-shrink: 0;
+  }
+  #pg-editor {
+    flex: 1; padding: 14px 16px; font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+    font-size: 13px; line-height: 1.7; background: transparent; color: var(--text);
+    border: none; outline: none; resize: none; overflow-y: auto; tab-size: 2;
+  }
+
+  /* OUTPUT */
+  #pg-output {
+    flex: 1; overflow-y: auto; padding: 12px 16px;
+    font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 13px;
+    line-height: 1.7; background: var(--code-bg);
+  }
+  .pg-out-hint { color: var(--text-muted); font-style: italic; font-size: 13px; }
+  .pg-out-run-header {
+    font-size: 11px; color: var(--text-muted); margin: 10px 0 6px;
+    padding-bottom: 4px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .pg-out-run-header:first-child { margin-top: 0; }
+  .pg-out-line { padding: 1px 0; display: flex; align-items: flex-start; gap: 8px; }
+  .pg-out-line .pg-icon { flex-shrink: 0; width: 16px; opacity: .6; }
+  .pg-out-log { color: #c8d8e8; }
+  .pg-out-error { color: #f08090; }
+  .pg-out-warn { color: #E8B84B; }
+  .pg-out-info { color: #a8c8ff; }
+  .pg-out-success { color: #6dd4dc; font-size: 11px; margin-top: 6px; font-style: italic; }
+  .pg-out-time { margin-left: auto; color: var(--text-muted); font-size: 11px; }
+  #pg-status { font-size: 11px; color: var(--text-muted); }
+  #pg-run-count { font-size: 11px; color: var(--text-muted); }
+  #pg-divider { width: 4px; background: var(--border); cursor: col-resize; flex-shrink: 0; transition: background .15s; }
+  #pg-divider:hover { background: #E8B84B; }
+
+  /* ═══ FLOATING PLAYGROUND ══════════════════════════════════════════════════ */
+
+  /* Trigger button — fixed top-right */
+  #float-pg-btn {
+    position: fixed; top: 14px; right: 18px; z-index: 900;
+    display: flex; align-items: center; gap: 7px;
+    background: #E8B84B; color: #091422;
+    border: none; border-radius: 8px; padding: 8px 14px;
+    font-size: 13px; font-weight: 700; cursor: pointer;
+    box-shadow: 0 4px 16px rgba(0,0,0,.45);
+    transition: transform .15s, box-shadow .15s, background .15s;
+  }
+  #float-pg-btn:hover { transform: translateY(-1px); box-shadow: 0 6px 20px rgba(0,0,0,.55); background: #f0ca60; }
+  #float-pg-btn.open { background: #253d5c; color: #E8B84B; border: 1px solid #E8B84B; }
+
+  /* Panel */
+  #float-pg-panel {
+    position: fixed; z-index: 950;
+    bottom: 24px; right: 18px;
+    width: 640px; height: 480px;
+    min-width: 340px; min-height: 260px;
+    background: #0c1828;
+    border: 1px solid #E8B84B;
+    border-radius: 12px;
+    box-shadow: 0 20px 60px rgba(0,0,0,.7);
+    display: none; flex-direction: column; overflow: hidden;
+    /* entrance animation */
+    transform-origin: bottom right;
+  }
+  #float-pg-panel.visible {
+    display: flex;
+    animation: floatIn .18s cubic-bezier(.22,1,.36,1);
+  }
+  #float-pg-panel.minimised #float-pg-body { display: none; }
+  #float-pg-panel.minimised { height: auto !important; }
+
+  @keyframes floatIn {
+    from { opacity: 0; transform: scale(.92) translateY(12px); }
+    to   { opacity: 1; transform: scale(1) translateY(0); }
+  }
+
+  /* Title bar */
+  #float-pg-titlebar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 10px 8px 14px;
+    background: #091422; border-bottom: 1px solid var(--border);
+    cursor: grab; user-select: none; flex-shrink: 0; border-radius: 12px 12px 0 0;
+  }
+  #float-pg-titlebar:active { cursor: grabbing; }
+  #float-pg-tbar-left { display: flex; align-items: center; gap: 8px; flex: 1; min-width: 0; }
+  #float-pg-tbar-title { font-size: 13px; font-weight: 700; color: var(--text); white-space: nowrap; }
+  #float-pg-tbar-right { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
+
+  /* Snippet select */
+  #float-pg-snippets-wrap { flex: 1; min-width: 0; }
+  #float-pg-snippet-sel {
+    background: var(--surface2); border: 1px solid var(--border); color: var(--text-muted);
+    border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer;
+    max-width: 140px; outline: none;
+  }
+  #float-pg-snippet-sel:focus { border-color: #E8B84B; }
+
+  /* Title bar icon buttons */
+  .float-pg-tbtn {
+    background: transparent; border: 1px solid transparent; color: var(--text-muted);
+    border-radius: 5px; padding: 3px 8px; font-size: 12px; cursor: pointer;
+    transition: all .12s; font-family: monospace; font-weight: 600;
+  }
+  .float-pg-tbtn:hover { background: var(--surface2); border-color: var(--border); color: var(--text); }
+  .float-pg-run-btn { background: #E8B84B !important; color: #091422 !important; border-color: #E8B84B !important; font-weight: 700; }
+  .float-pg-run-btn:hover { background: #f0ca60 !important; }
+
+  /* Body */
+  #float-pg-body {
+    display: flex; flex-direction: column; flex: 1; overflow: hidden; min-height: 0;
+  }
+
+  /* Editor */
+  #float-pg-editor-wrap {
+    display: flex; flex: 1; overflow: hidden; background: var(--code-bg);
+    min-height: 80px;
+  }
+  #float-pg-line-nums {
+    padding: 10px 0 10px 8px; min-width: 34px; text-align: right;
+    font-family: 'Cascadia Code','Fira Code','Consolas',monospace; font-size: 12px;
+    line-height: 1.65; color: #2a4060; background: var(--code-bg);
+    border-right: 1px solid var(--border); user-select: none;
+    overflow: hidden; flex-shrink: 0;
+  }
+  #float-pg-editor {
+    flex: 1; padding: 10px 12px;
+    font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+    font-size: 12px; line-height: 1.65; background: transparent;
+    color: var(--text); border: none; outline: none; resize: none;
+    overflow-y: auto; tab-size: 2;
+  }
+
+  /* Vertical divider between editor and output */
+  #float-pg-vdivider {
+    height: 4px; background: var(--border); cursor: row-resize;
+    flex-shrink: 0; transition: background .15s;
+  }
+  #float-pg-vdivider:hover { background: #E8B84B; }
+
+  /* Output */
+  #float-pg-output-wrap {
+    display: flex; flex-direction: column; flex: 0 0 140px; overflow: hidden;
+    min-height: 60px; background: var(--code-bg);
+    border-top: 1px solid var(--border);
+  }
+  #float-pg-output-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 4px 12px; background: rgba(255,255,255,.02);
+    border-bottom: 1px solid var(--border); flex-shrink: 0;
+  }
+  #float-pg-run-info { font-size: 11px; color: var(--text-muted); font-family: monospace; }
+  #float-pg-output {
+    flex: 1; overflow-y: auto; padding: 8px 12px;
+    font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+    font-size: 12px; line-height: 1.6;
+  }
+
+  /* Resize corner handle */
+  #float-pg-resize-handle {
+    position: absolute; bottom: 0; right: 0;
+    width: 16px; height: 16px; cursor: nwse-resize;
+    background: linear-gradient(135deg, transparent 50%, #E8B84B 50%);
+    border-radius: 0 0 12px 0; opacity: .5; transition: opacity .15s;
+  }
+  #float-pg-resize-handle:hover { opacity: 1; }
+
+  /* ── Fullscreen mode ────────────────────────────────────────────────────── */
+  #float-pg-panel.fullscreen {
+    top: 0 !important; left: 0 !important;
+    width: 100vw !important; height: 100vh !important;
+    border-radius: 0 !important; border-color: var(--border) !important;
+    bottom: auto !important; right: auto !important;
+  }
+  #float-pg-panel.fullscreen #float-pg-titlebar { border-radius: 0; cursor: default; }
+  #float-pg-panel.fullscreen #float-pg-resize-handle { display: none; }
+  #float-pg-panel.fullscreen #float-pg-editor { font-size: 14px; line-height: 1.7; }
+  #float-pg-panel.fullscreen #float-pg-line-nums { font-size: 14px; line-height: 1.7; }
+  #float-pg-panel.fullscreen #float-pg-output { font-size: 13px; }
+  #float-pg-panel.fullscreen #float-pg-output-wrap { flex: 0 0 220px; }
+
+  /* ── Error card ─────────────────────────────────────────────────────────── */
+  .pg-error-card {
+    background: rgba(196,69,112,.08);
+    border: 1px solid rgba(196,69,112,.35);
+    border-left: 3px solid #c44570;
+    border-radius: 0 8px 8px 0;
+    padding: 10px 12px; margin: 4px 0 6px; font-family: inherit;
+  }
+  .pg-error-header { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+  .pg-error-type-badge {
+    display: inline-block; font-size: 10px; font-weight: 800; letter-spacing: .07em;
+    text-transform: uppercase; background: rgba(196,69,112,.25); color: #f090b0;
+    padding: 2px 7px; border-radius: 99px;
+  }
+  .pg-error-msg { font-size: 12px; color: #f0a0b8; font-weight: 600; }
+  .pg-error-location { font-size: 11px; color: var(--text-muted); margin-bottom: 5px; font-family: monospace; }
+  .pg-error-line-preview {
+    background: rgba(0,0,0,.3); border-radius: 4px; padding: 4px 8px;
+    font-family: 'Cascadia Code','Fira Code','Consolas',monospace;
+    font-size: 11px; color: #fda4af; margin-bottom: 6px;
+    white-space: pre; overflow-x: auto;
+  }
+  .pg-error-hint {
+    font-size: 11px; color: #E8B84B; line-height: 1.5;
+  }
+  .pg-error-hint strong { color: #f0ca60; }
+
+  /* ── Warn card ──────────────────────────────────────────────────────────── */
+  .pg-warn-card {
+    background: rgba(232,184,75,.06);
+    border-left: 3px solid #E8B84B;
+    border-radius: 0 6px 6px 0;
+    padding: 5px 10px; margin: 2px 0; font-size: 12px; color: #f0ca60;
+  }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<nav id="sidebar">
+  <div class="sidebar-header">
+    <div class="logo">
+      <!-- Spoon Consulting Logo SVG -->
+      <svg width="186" height="56" viewBox="0 0 186 56" xmlns="http://www.w3.org/2000/svg">
+        <!-- White circle -->
+        <circle cx="28" cy="28" r="27" fill="white"/>
+        <!-- "sp" inside circle in oxford blue -->
+        <text x="5" y="39" font-family="'Segoe UI',system-ui,sans-serif" font-size="30" font-weight="300" fill="#0c1828" letter-spacing="-1">sp</text>
+        <!-- "oon" continues to the right in white -->
+        <text x="53" y="37" font-family="'Segoe UI',system-ui,sans-serif" font-size="30" font-weight="300" fill="white" letter-spacing="-1">oon</text>
+        <!-- "consulting" below "oon" -->
+        <text x="54" y="52" font-family="'Segoe UI',system-ui,sans-serif" font-size="14" font-weight="300" fill="rgba(255,255,255,0.75)" letter-spacing="1">consulting</text>
+      </svg>
+    </div>
+    <h2 style="color:var(--text-muted);font-size:11px;margin-top:2px;font-weight:500;letter-spacing:.04em;">IT BOOTCAMP 2026 · JavaScript</h2>
+  </div>
+  <div class="progress-bar-wrap">
+    <div class="progress-label">
+      <span>Progress</span>
+      <span id="progress-text">0 / 12</span>
+    </div>
+    <div class="progress-track"><div class="progress-fill" id="progress-fill" style="width:0%"></div></div>
+  </div>
+  <div class="nav-section">
+    <div class="nav-label">Modules</div>
+    <div class="nav-item active" data-module="intro" onclick="goTo('intro')"><span class="icon">🏠</span>Welcome <span class="check" id="chk-intro">○</span></div>
+    <div class="nav-item" data-module="variables" onclick="goTo('variables')"><span class="icon">📦</span>Variables &amp; Scope <span class="check" id="chk-variables">○</span></div>
+    <div class="nav-item" data-module="datatypes" onclick="goTo('datatypes')"><span class="icon">🔬</span>Data Types <span class="check" id="chk-datatypes">○</span></div>
+    <div class="nav-item" data-module="strings" onclick="goTo('strings')"><span class="icon">📝</span>Strings <span class="check" id="chk-strings">○</span></div>
+    <div class="nav-item" data-module="arrays" onclick="goTo('arrays')"><span class="icon">🗂️</span>Arrays <span class="check" id="chk-arrays">○</span></div>
+    <div class="nav-item" data-module="objects" onclick="goTo('objects')"><span class="icon">🧩</span>Objects <span class="check" id="chk-objects">○</span></div>
+    <div class="nav-item" data-module="control" onclick="goTo('control')"><span class="icon">🔀</span>Control Structures <span class="check" id="chk-control">○</span></div>
+    <div class="nav-item" data-module="loops" onclick="goTo('loops')"><span class="icon">🔁</span>Loops <span class="check" id="chk-loops">○</span></div>
+    <div class="nav-item" data-module="functions" onclick="goTo('functions')"><span class="icon">⚡</span>Functions &amp; ES6 <span class="check" id="chk-functions">○</span></div>
+    <div class="nav-item" data-module="spread" onclick="goTo('spread')"><span class="icon">🌀</span>Spread &amp; Rest <span class="check" id="chk-spread">○</span></div>
+    <div class="nav-item" data-module="promises" onclick="goTo('promises')"><span class="icon">🤝</span>Promises &amp; Async <span class="check" id="chk-promises">○</span></div>
+    <div class="nav-item" data-module="classes" onclick="goTo('classes')"><span class="icon">🏛️</span>Classes &amp; Modules <span class="check" id="chk-classes">○</span></div>
+    <div class="nav-label" style="margin-top:6px">Tools</div>
+    <div class="nav-item" data-module="playground" onclick="goTo('playground')"><span class="icon">🚀</span>Free Playground</div>
+  </div>
+</nav>
+
+<!-- MAIN CONTENT -->
+<main id="main">
+
+  <!-- ===== INTRO ===== -->
+  <div class="module active" id="mod-intro">
+    <div class="intro-hero">
+      <div class="hero-title">Modern JavaScript</div>
+      <p>Your interactive guide to modern JS — built for Spoon Consulting's IT Bootcamp. Work through each module, run the live examples, and test your knowledge.</p>
+    </div>
+    <div class="section">
+      <h3>What is JavaScript?</h3>
+      <p>JavaScript is a <strong>scripting language</strong> that runs in the browser (and on servers via Node.js). It is <strong>case-sensitive</strong> and dynamically typed — you don't declare variable types.</p>
+      <div class="compare-grid cols-2">
+        <div class="compare-card">
+          <h4 class="yellow">What JS can do</h4>
+          <ul>
+            <li>Add interactive behaviour to web pages</li>
+            <li>Build web &amp; mobile apps (React, React Native)</li>
+            <li>Run on servers with Node.js</li>
+            <li>Power browser-based games</li>
+          </ul>
+        </div>
+        <div class="compare-card highlight">
+          <h4 class="green">What we'll cover today</h4>
+          <ul>
+            <li>Variables, data types &amp; scope</li>
+            <li>Strings, arrays &amp; objects</li>
+            <li>Loops &amp; control structures</li>
+            <li>Arrow functions, spread/rest, classes</li>
+            <li>Promises &amp; async/await</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div class="section">
+      <h3>Jump to a topic</h3>
+      <div class="topics-grid">
+        <div class="topic-chip" onclick="goTo('variables')"><div class="tc-num">Module 1</div><div class="tc-name">Variables &amp; Scope</div></div>
+        <div class="topic-chip" onclick="goTo('datatypes')"><div class="tc-num">Module 2</div><div class="tc-name">Data Types</div></div>
+        <div class="topic-chip" onclick="goTo('strings')"><div class="tc-num">Module 3</div><div class="tc-name">Strings</div></div>
+        <div class="topic-chip" onclick="goTo('arrays')"><div class="tc-num">Module 4</div><div class="tc-name">Arrays</div></div>
+        <div class="topic-chip" onclick="goTo('objects')"><div class="tc-num">Module 5</div><div class="tc-name">Objects</div></div>
+        <div class="topic-chip" onclick="goTo('control')"><div class="tc-num">Module 6</div><div class="tc-name">Control Structures</div></div>
+        <div class="topic-chip" onclick="goTo('loops')"><div class="tc-num">Module 7</div><div class="tc-name">Loops</div></div>
+        <div class="topic-chip" onclick="goTo('functions')"><div class="tc-num">Module 8</div><div class="tc-name">Functions &amp; ES6</div></div>
+        <div class="topic-chip" onclick="goTo('spread')"><div class="tc-num">Module 9</div><div class="tc-name">Spread &amp; Rest</div></div>
+        <div class="topic-chip" onclick="goTo('promises')"><div class="tc-num">Module 10</div><div class="tc-name">Promises &amp; Async</div></div>
+        <div class="topic-chip" onclick="goTo('classes')"><div class="tc-num">Module 11</div><div class="tc-name">Classes &amp; Modules</div></div>
+      </div>
+    </div>
+    <div class="module-nav">
+      <button class="nav-btn" disabled>← Previous</button>
+      <button class="nav-btn primary" onclick="goTo('variables')">Start Learning →</button>
+    </div>
+  </div>
+
+  <!-- ===== VARIABLES ===== -->
+  <div class="module" id="mod-variables">
+    <div class="module-header">
+      <div class="module-badge">Module 1</div>
+      <div class="module-title">Variables &amp; Scope</div>
+      <div class="module-sub">Understanding how JS stores data and where that data can be accessed.</div>
+    </div>
+
+    <div class="section">
+      <h3>Declaring variables: var, let, const</h3>
+      <div class="compare-grid cols-3">
+        <div class="compare-card warn">
+          <h4 class="red">var <span class="pill red">Avoid</span></h4>
+          <ul>
+            <li>Function scoped</li>
+            <li>Can be re-declared</li>
+            <li>Leaks to parent scope</li>
+            <li>Causes confusing bugs</li>
+          </ul>
+        </div>
+        <div class="compare-card">
+          <h4 class="yellow">let <span class="pill yellow">Use when reassigning</span></h4>
+          <ul>
+            <li>Block scoped ({})</li>
+            <li>Can be reassigned</li>
+            <li>Cannot be re-declared</li>
+            <li>Safer than var</li>
+          </ul>
+        </div>
+        <div class="compare-card highlight">
+          <h4 class="green">const <span class="pill green">Default choice</span></h4>
+          <ul>
+            <li>Block scoped ({})</li>
+            <li>Cannot be reassigned</li>
+            <li>Makes intent clear</li>
+            <li>Use for everything else</li>
+          </ul>
+        </div>
+      </div>
+      <div class="callout tip">💡 Rule of thumb: always start with <code>const</code>. Switch to <code>let</code> only if you need to reassign. Never use <code>var</code>.</div>
+    </div>
+
+    <div class="section">
+      <h3>Scope visualised</h3>
+      <p>Scope determines where a variable can be accessed. <code>var</code> is function-scoped; <code>let</code> and <code>const</code> are block-scoped.</p>
+      <div class="diagram">
+        <div class="scope-vis">
+          <div class="scope-box global">
+            <div class="scope-label">Global Scope</div>
+            <div class="var-tag v">var x</div>
+            <div class="var-tag l">let y</div>
+            <div class="var-tag c">const z</div>
+          </div>
+          <div class="scope-box func">
+            <div class="scope-label">Function Scope</div>
+            <div class="var-tag v">var inside</div>
+            <div style="margin-top:8px">
+              <div class="scope-box block" style="margin:0">
+                <div class="scope-label">Block Scope { }</div>
+                <div class="var-tag l">let blockVar</div>
+                <div class="var-tag c">const blockConst</div>
+                <div style="font-size:11px;color:#6b7280;margin-top:6px">var leaks UP ↑</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">scope-demo.js</span><button class="run-btn" onclick="runCode('scope1')">▶ Run</button></div>
+        <div class="code-body" id="code-scope1"><span class="kw">function</span> <span class="fn">testVar</span>() {
+  <span class="kw">if</span> (<span class="kw">true</span>) {
+    <span class="kw">var</span> <span class="var">name</span> = <span class="str">'admin'</span>; <span class="cmt">// leaks out of the block</span>
+  }
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="var">name</span>); <span class="cmt">// "admin" — accessible!</span>
+}
+
+<span class="kw">function</span> <span class="fn">testLet</span>() {
+  <span class="kw">if</span> (<span class="kw">true</span>) {
+    <span class="kw">let</span> <span class="var">name</span> = <span class="str">'admin'</span>;
+  }
+  <span class="kw">try</span> { <span class="fn">console</span>.<span class="fn">log</span>(<span class="var">name</span>); } <span class="kw">catch</span>(<span class="var">e</span>) { <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'ReferenceError: name is not defined'</span>); }
+}
+
+<span class="fn">testVar</span>();
+<span class="fn">testLet</span>();</div>
+        <div class="code-output" id="out-scope1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>The var loop trap</h3>
+      <p>A classic gotcha: using <code>var</code> in a <code>for</code> loop with <code>setTimeout</code> leaks the same variable across all iterations.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">var-trap.js</span><button class="run-btn" onclick="runCode('vartrap')">▶ Run</button></div>
+        <div class="code-body" id="code-vartrap"><span class="cmt">// With var — all callbacks share the SAME i</span>
+<span class="kw">const</span> <span class="var">varResults</span> = [];
+<span class="kw">for</span> (<span class="kw">var</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> &lt; <span class="num">3</span>; <span class="var">i</span>++) {
+  <span class="var">varResults</span>.<span class="fn">push</span>(<span class="var">i</span>);
+}
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"var results:"</span>, <span class="var">varResults</span>); <span class="cmt">// [0,1,2] — but if async, always 3</span>
+
+<span class="cmt">// With let — each iteration gets its OWN scope</span>
+<span class="kw">const</span> <span class="var">letResults</span> = [];
+<span class="kw">for</span> (<span class="kw">let</span> <span class="var">j</span> = <span class="num">0</span>; <span class="var">j</span> &lt; <span class="num">3</span>; <span class="var">j</span>++) {
+  <span class="var">letResults</span>.<span class="fn">push</span>(<span class="var">j</span>);
+}
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">"let results:"</span>, <span class="var">letResults</span>); <span class="cmt">// [0,1,2] — always correct</span></div>
+        <div class="code-output" id="out-vartrap"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Quick quiz</h3>
+      <div class="quiz-card">
+        <h4>What will this output?<br><code style="font-size:13px;color:#c084fc">const x = 5; x = 10; console.log(x);</code></h4>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="answer(this,'wrong','q1')">10</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','q1')">TypeError: Assignment to constant variable</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q1')">5</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q1')">undefined</div>
+        </div>
+        <div class="quiz-feedback" id="q1">✅ Correct! <code>const</code> prevents reassignment. You'll get a TypeError at runtime.</div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('intro')">← Welcome</button>
+      <button class="nav-btn primary" onclick="goTo('datatypes')">Data Types →</button>
+    </div>
+  </div>
+
+  <!-- ===== DATA TYPES ===== -->
+  <div class="module" id="mod-datatypes">
+    <div class="module-header">
+      <div class="module-badge">Module 2</div>
+      <div class="module-title">Data Types</div>
+      <div class="module-sub">JavaScript is dynamically typed — you don't declare types, but they still matter.</div>
+    </div>
+
+    <div class="section">
+      <h3>undefined vs null vs empty string</h3>
+      <div class="type-grid">
+        <div class="type-card">
+          <div class="type-icon">❓</div>
+          <h4 style="color:var(--accent)">undefined</h4>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Variable declared but not given a value yet.</p>
+          <span class="type-val">let a;</span>
+          <span class="type-val">a === undefined</span>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:8px">When you see it: uninitialized vars, missing params, missing object props</p>
+        </div>
+        <div class="type-card" style="border-color:var(--accent2)">
+          <div class="type-icon">🚫</div>
+          <h4 style="color:var(--accent2)">null</h4>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">Intentionally set to "no value". Used with objects.</p>
+          <span class="type-val">let a = null;</span>
+          <span class="type-val">a === null</span>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:8px">When you see it: resetting object properties, APIs returning "nothing"</p>
+        </div>
+        <div class="type-card" style="border-color:var(--accent3)">
+          <div class="type-icon">📭</div>
+          <h4 style="color:var(--accent3)">Empty String ""</h4>
+          <p style="font-size:12px;color:var(--text-muted);margin-bottom:8px">A string with no characters. Still a valid string.</p>
+          <span class="type-val">let a = '';</span>
+          <span class="type-val">a.length === 0</span>
+          <p style="font-size:11px;color:var(--text-muted);margin-top:8px">When you see it: form fields, string ops that produce no content</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>typeof &amp; comparisons</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">types.js</span><button class="run-btn" onclick="runCode('types1')">▶ Run</button></div>
+        <div class="code-body" id="code-types1"><span class="kw">let</span> <span class="var">a</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="kw">typeof</span> <span class="var">a</span>);           <span class="cmt">// "undefined"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">a</span> === <span class="kw">undefined</span>);  <span class="cmt">// true</span>
+
+<span class="kw">let</span> <span class="var">b</span> = <span class="kw">null</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="kw">typeof</span> <span class="var">b</span>);           <span class="cmt">// "object" (JS quirk!)</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">b</span> === <span class="kw">null</span>);         <span class="cmt">// true</span>
+
+<span class="kw">let</span> <span class="var">c</span> = <span class="str">''</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="kw">typeof</span> <span class="var">c</span>);           <span class="cmt">// "string"</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">c</span>.<span class="prop">length</span> === <span class="num">0</span>);     <span class="cmt">// true</span></div>
+        <div class="code-output" id="out-types1"></div>
+      </div>
+      <div class="callout warn">⚠️ <code>typeof null</code> returns <code>"object"</code> — this is a famous JavaScript bug kept for backwards compatibility. Always use <code>=== null</code> to check for null.</div>
+    </div>
+
+    <div class="section">
+      <h3>Equality: == vs ===</h3>
+      <p>JavaScript has two equality operators. <code>===</code> (strict) checks both value AND type. <code>==</code> (loose) coerces types first — avoid it.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">equality.js</span><button class="run-btn" onclick="runCode('eq1')">▶ Run</button></div>
+        <div class="code-body" id="code-eq1"><span class="fn">console</span>.<span class="fn">log</span>(<span class="num">1</span> <span class="op">==</span>  <span class="str">'1'</span>);   <span class="cmt">// true  — coerces string to number</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="num">1</span> <span class="op">===</span> <span class="str">'1'</span>);   <span class="cmt">// false — different types</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="num">1</span> <span class="op">===</span> <span class="num">1</span>);    <span class="cmt">// true</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="num">1</span> <span class="op">==</span>  <span class="kw">true</span>);  <span class="cmt">// true  — coerces boolean</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="num">1</span> <span class="op">===</span> <span class="kw">true</span>);  <span class="cmt">// false — different types</span></div>
+        <div class="code-output" id="out-eq1"></div>
+      </div>
+      <div class="callout tip">💡 Always use <code>===</code>. The only time <code>==</code> is useful is checking for both <code>null</code> and <code>undefined</code> at once: <code>if (x == null)</code></div>
+    </div>
+
+    <div class="section">
+      <h3>Quick quiz</h3>
+      <div class="quiz-card">
+        <h4>What does <code>typeof null</code> return?</h4>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="answer(this,'wrong','q2')">"null"</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','q2')">"object"</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q2')">"undefined"</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q2')">"number"</div>
+        </div>
+        <div class="quiz-feedback" id="q2">✅ Correct! <code>typeof null === "object"</code> is a long-standing JS quirk. Don't use <code>typeof</code> to check for null — use <code>=== null</code> instead.</div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('variables')">← Variables</button>
+      <button class="nav-btn primary" onclick="goTo('strings')">Strings →</button>
+    </div>
+  </div>
+
+  <!-- ===== STRINGS ===== -->
+  <div class="module" id="mod-strings">
+    <div class="module-header">
+      <div class="module-badge">Module 3</div>
+      <div class="module-title">Strings</div>
+      <div class="module-sub">From basic concatenation to ES6 template literals and built-in string methods.</div>
+    </div>
+
+    <div class="section">
+      <h3>Template literals (ES6)</h3>
+      <p>Use backticks <code>`</code> instead of quotes. Embed any expression with <code>${ }</code>. Multi-line strings just work.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">template-literals.js</span><button class="run-btn" onclick="runCode('tl1')">▶ Run</button></div>
+        <div class="code-body" id="code-tl1"><span class="kw">const</span> <span class="var">name</span> = <span class="str">'Kevan'</span>;
+<span class="kw">const</span> <span class="var">price</span> = <span class="num">19.99</span>;
+<span class="kw">const</span> <span class="var">tax</span> = <span class="num">0.07</span>;
+
+<span class="cmt">// Old way</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'Hello, '</span> + <span class="var">name</span> + <span class="str">'!'</span>);
+
+<span class="cmt">// Template literal</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`Hello, <span class="op">${</span><span class="var">name</span><span class="op">}</span>!`</span>);
+
+<span class="cmt">// Expression inside ${ }</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`Total: $<span class="op">${</span>(<span class="var">price</span> * (<span class="num">1</span> + <span class="var">tax</span>)).<span class="fn">toFixed</span>(<span class="num">2</span>)<span class="op">}</span>`</span>);
+
+<span class="cmt">// Multi-line</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`Line 1
+Line 2`</span>);</div>
+        <div class="code-output" id="out-tl1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Useful string methods</h3>
+      <div class="method-list">
+        <div class="method-item"><code>.includes(str)</code><p>Returns true if string contains the substring</p></div>
+        <div class="method-item"><code>.startsWith(str)</code><p>Returns true if string starts with value</p></div>
+        <div class="method-item"><code>.endsWith(str)</code><p>Returns true if string ends with value</p></div>
+        <div class="method-item"><code>.repeat(n)</code><p>Returns string repeated n times</p></div>
+        <div class="method-item"><code>.toUpperCase()</code><p>Returns uppercased copy</p></div>
+        <div class="method-item"><code>.trim()</code><p>Removes whitespace from both ends</p></div>
+        <div class="method-item"><code>.split(sep)</code><p>Splits into an array by separator</p></div>
+        <div class="method-item"><code>.slice(start, end)</code><p>Extracts part of a string</p></div>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">string-methods.js</span><button class="run-btn" onclick="runCode('sm1')">▶ Run</button></div>
+        <div class="code-body" id="code-sm1"><span class="kw">const</span> <span class="var">email</span> = <span class="str">'keshav@spoonconsulting.com'</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">email</span>.<span class="fn">includes</span>(<span class="str">'spoon'</span>));       <span class="cmt">// true</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">email</span>.<span class="fn">endsWith</span>(<span class="str">'.com'</span>));        <span class="cmt">// true</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">email</span>.<span class="fn">toUpperCase</span>());           <span class="cmt">// KESHAV@SPOONCONSULTING.COM</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'ha'</span>.<span class="fn">repeat</span>(<span class="num">3</span>));                <span class="cmt">// hahaha</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">email</span>.<span class="fn">split</span>(<span class="str">'@'</span>));             <span class="cmt">// ["keshav", "spoonconsulting.com"]</span></div>
+        <div class="code-output" id="out-sm1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Try it yourself</h3>
+      <div class="playground">
+        <div class="playground-header"><span>🧪 Playground</span></div>
+        <textarea class="playground-code" id="pg-strings">const sentence = 'JavaScript is awesome!';
+// Try: .toUpperCase(), .includes(), .split(' ')
+console.log(sentence.split(' '));</textarea>
+        <button class="playground-run" onclick="runPlayground('pg-strings','pg-strings-out')">▶ Run</button>
+        <div class="playground-out" id="pg-strings-out">// output will appear here</div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('datatypes')">← Data Types</button>
+      <button class="nav-btn primary" onclick="goTo('arrays')">Arrays →</button>
+    </div>
+  </div>
+
+  <!-- ===== ARRAYS ===== -->
+  <div class="module" id="mod-arrays">
+    <div class="module-header">
+      <div class="module-badge">Module 4</div>
+      <div class="module-title">Arrays</div>
+      <div class="module-sub">Ordered collections, destructuring, and the powerful array methods every JS developer must know.</div>
+    </div>
+
+    <div class="section">
+      <h3>Array basics &amp; destructuring</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">arrays.js</span><button class="run-btn" onclick="runCode('arr1')">▶ Run</button></div>
+        <div class="code-body" id="code-arr1"><span class="kw">const</span> <span class="var">details</span> = [<span class="str">'Swankii'</span>, <span class="str">'Pakii'</span>, <span class="str">'toke.com'</span>];
+
+<span class="cmt">// Access by index</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">details</span>[<span class="num">0</span>]); <span class="cmt">// Swankii</span>
+
+<span class="cmt">// Destructuring — unpack into named variables</span>
+<span class="kw">const</span> [<span class="var">first</span>, <span class="var">last</span>, <span class="var">website</span>] = <span class="var">details</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">first</span>);   <span class="cmt">// Swankii</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">last</span>);    <span class="cmt">// Pakii</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">website</span>); <span class="cmt">// toke.com</span></div>
+        <div class="code-output" id="out-arr1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Key array methods</h3>
+      <p>These methods are the backbone of modern JavaScript. Each takes a callback function.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">array-methods.js</span><button class="run-btn" onclick="runCode('arrm1')">▶ Run</button></div>
+        <div class="code-body" id="code-arrm1"><span class="kw">const</span> <span class="var">numbers</span> = [<span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>, <span class="num">5</span>, <span class="num">6</span>];
+
+<span class="cmt">// .map() — transform each element, returns new array</span>
+<span class="kw">const</span> <span class="var">doubled</span> = <span class="var">numbers</span>.<span class="fn">map</span>(<span class="var">n</span> <span class="op">=></span> <span class="var">n</span> * <span class="num">2</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'map:'</span>, <span class="var">doubled</span>);
+
+<span class="cmt">// .filter() — keep elements that pass the test</span>
+<span class="kw">const</span> <span class="var">evens</span> = <span class="var">numbers</span>.<span class="fn">filter</span>(<span class="var">n</span> <span class="op">=></span> <span class="var">n</span> % <span class="num">2</span> === <span class="num">0</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'filter:'</span>, <span class="var">evens</span>);
+
+<span class="cmt">// .reduce() — accumulate into a single value</span>
+<span class="kw">const</span> <span class="var">sum</span> = <span class="var">numbers</span>.<span class="fn">reduce</span>((<span class="var">acc</span>, <span class="var">n</span>) <span class="op">=></span> <span class="var">acc</span> + <span class="var">n</span>, <span class="num">0</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'reduce sum:'</span>, <span class="var">sum</span>);
+
+<span class="cmt">// .find() / .findIndex()</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'find >4:'</span>, <span class="var">numbers</span>.<span class="fn">find</span>(<span class="var">n</span> <span class="op">=></span> <span class="var">n</span> > <span class="num">4</span>));
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'findIndex >4:'</span>, <span class="var">numbers</span>.<span class="fn">findIndex</span>(<span class="var">n</span> <span class="op">=></span> <span class="var">n</span> > <span class="num">4</span>));</div>
+        <div class="code-output" id="out-arrm1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Try it yourself</h3>
+      <div class="playground">
+        <div class="playground-header"><span>🧪 Playground — Array Challenge</span></div>
+        <textarea class="playground-code" id="pg-arrays">// Challenge: from this array, get only names longer than 4 chars, uppercased
+const names = ['Tom', 'Alice', 'Bob', 'Charlie', 'Ed', 'Natasha'];
+
+const result = names
+  .filter(name => name.length > 4)
+  .map(name => name.toUpperCase());
+
+console.log(result);</textarea>
+        <button class="playground-run" onclick="runPlayground('pg-arrays','pg-arrays-out')">▶ Run</button>
+        <div class="playground-out" id="pg-arrays-out">// output will appear here</div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Quick quiz</h3>
+      <div class="quiz-card">
+        <h4>What does <code>[1,2,3].map(x => x * 2)</code> return?</h4>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="answer(this,'wrong','q3')">12 (sum of doubled)</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','q3')">[2, 4, 6]</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q3')">[1, 2, 3] (unchanged)</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q3')">undefined</div>
+        </div>
+        <div class="quiz-feedback" id="q3">✅ Correct! <code>.map()</code> returns a new array with each element transformed by the callback.</div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('strings')">← Strings</button>
+      <button class="nav-btn primary" onclick="goTo('objects')">Objects →</button>
+    </div>
+  </div>
+
+  <!-- ===== OBJECTS ===== -->
+  <div class="module" id="mod-objects">
+    <div class="module-header">
+      <div class="module-badge">Module 5</div>
+      <div class="module-title">Objects</div>
+      <div class="module-sub">Key-value pairs, destructuring, renaming, defaults, and enhanced object literals.</div>
+    </div>
+
+    <div class="section">
+      <h3>Object basics &amp; destructuring</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">objects.js</span><button class="run-btn" onclick="runCode('obj1')">▶ Run</button></div>
+        <div class="code-body" id="code-obj1"><span class="kw">const</span> <span class="var">person</span> = {
+  <span class="prop">firstName</span>: <span class="str">'Kevan'</span>,
+  <span class="prop">lastName</span>: <span class="str">'Moothien'</span>,
+  <span class="prop">location</span>: { <span class="prop">city</span>: <span class="str">'Las Vegas'</span>, <span class="prop">state</span>: <span class="str">'Nevada'</span> }
+};
+
+<span class="cmt">// Basic destructuring</span>
+<span class="kw">const</span> { <span class="var">firstName</span>, <span class="var">lastName</span> } = <span class="var">person</span>;
+<span class="kw">const</span> { <span class="var">city</span>, <span class="var">state</span> } = <span class="var">person</span>.<span class="prop">location</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">firstName</span>, <span class="var">lastName</span>); <span class="cmt">// Kevan Moothien</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">city</span>, <span class="var">state</span>);         <span class="cmt">// Las Vegas Nevada</span>
+
+<span class="cmt">// Rename while destructuring</span>
+<span class="kw">const</span> { <span class="var">firstName</span>: <span class="var">fName</span>, <span class="var">lastName</span>: <span class="var">lName</span> } = <span class="var">person</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">fName</span>, <span class="var">lName</span>); <span class="cmt">// Kevan Moothien</span>
+
+<span class="cmt">// Default values in destructuring</span>
+<span class="kw">const</span> <span class="var">settings</span> = { <span class="prop">color</span>: <span class="str">'white'</span>, <span class="prop">height</span>: <span class="num">500</span> };
+<span class="kw">const</span> { <span class="var">width</span> = <span class="num">200</span>, <span class="var">height</span> = <span class="num">200</span>, <span class="var">color</span> = <span class="str">'black'</span> } = <span class="var">settings</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">width</span>, <span class="var">height</span>, <span class="var">color</span>); <span class="cmt">// 200 500 white</span></div>
+        <div class="code-output" id="out-obj1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Enhanced object literals (ES6)</h3>
+      <div class="compare-grid cols-2">
+        <div class="compare-card">
+          <h4 class="red" style="margin-bottom:10px">Old way</h4>
+          <div class="code-block" style="margin:0">
+            <div class="code-body" style="font-size:12px"><span class="kw">const</span> <span class="var">person</span> = {
+  <span class="prop">first</span>: <span class="var">first</span>,
+  <span class="prop">last</span>: <span class="var">last</span>,
+  <span class="prop">greet</span>: <span class="kw">function</span>() {
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'hi'</span>);
+  }
+};</div>
+          </div>
+        </div>
+        <div class="compare-card highlight">
+          <h4 class="green" style="margin-bottom:10px">ES6 shorthand</h4>
+          <div class="code-block" style="margin:0">
+            <div class="code-body" style="font-size:12px"><span class="kw">const</span> <span class="var">person</span> = {
+  <span class="var">first</span>,   <span class="cmt">// same as first: first</span>
+  <span class="var">last</span>,
+  <span class="fn">greet</span>() {  <span class="cmt">// shorthand method</span>
+    <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'hi'</span>);
+  }
+};</div>
+          </div>
+        </div>
+      </div>
+      <div class="callout tip">💡 When the variable name matches the property name, you can just write the variable name once. This is one of the most common ES6 patterns you'll see in React and Node.js codebases.</div>
+    </div>
+
+    <div class="section">
+      <h3>Try it yourself</h3>
+      <div class="playground">
+        <div class="playground-header"><span>🧪 Playground — Destructuring</span></div>
+        <textarea class="playground-code" id="pg-objects">const user = {
+  name: 'Keshav',
+  role: 'Developer',
+  company: { name: 'Spoon Consulting', country: 'Mauritius' }
+};
+
+// Destructure name, role, and the company country
+const { name, role, company: { country } } = user;
+console.log(name, role, country);</textarea>
+        <button class="playground-run" onclick="runPlayground('pg-objects','pg-objects-out')">▶ Run</button>
+        <div class="playground-out" id="pg-objects-out">// output will appear here</div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('arrays')">← Arrays</button>
+      <button class="nav-btn primary" onclick="goTo('control')">Control Structures →</button>
+    </div>
+  </div>
+
+  <!-- ===== CONTROL STRUCTURES ===== -->
+  <div class="module" id="mod-control">
+    <div class="module-header">
+      <div class="module-badge">Module 6</div>
+      <div class="module-title">Control Structures</div>
+      <div class="module-sub">Making decisions in your code with if/else and switch statements.</div>
+    </div>
+
+    <div class="section">
+      <h3>if / else if / else</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">if-else.js</span><button class="run-btn" onclick="runCode('if1')">▶ Run</button></div>
+        <div class="code-body" id="code-if1"><span class="kw">const</span> <span class="var">time</span> = <span class="num">24</span>;
+<span class="kw">let</span> <span class="var">greeting</span>;
+
+<span class="kw">if</span> (<span class="var">time</span> &lt; <span class="num">10</span>) {
+  <span class="var">greeting</span> = <span class="str">"Good morning"</span>;
+} <span class="kw">else if</span> (<span class="var">time</span> &lt; <span class="num">20</span>) {
+  <span class="var">greeting</span> = <span class="str">"Good day"</span>;
+} <span class="kw">else</span> {
+  <span class="var">greeting</span> = <span class="str">"Good evening"</span>;
+}
+
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">greeting</span>); <span class="cmt">// Good evening</span></div>
+        <div class="code-output" id="out-if1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>switch statement</h3>
+      <p>Use <code>switch</code> when comparing a single value against many fixed options. Always include <code>break</code> and a <code>default</code> case.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">switch.js</span><button class="run-btn" onclick="runCode('sw1')">▶ Run</button></div>
+        <div class="code-body" id="code-sw1"><span class="kw">const</span> <span class="var">day</span> = <span class="num">3</span>; <span class="cmt">// 0=Sun, 1=Mon, ..., 6=Sat</span>
+<span class="kw">let</span> <span class="var">text</span>;
+
+<span class="kw">switch</span> (<span class="var">day</span>) {
+  <span class="kw">case</span> <span class="num">6</span>:
+    <span class="var">text</span> = <span class="str">"Today is Saturday"</span>;
+    <span class="kw">break</span>;
+  <span class="kw">case</span> <span class="num">0</span>:
+    <span class="var">text</span> = <span class="str">"Today is Sunday"</span>;
+    <span class="kw">break</span>;
+  <span class="kw">default</span>:
+    <span class="var">text</span> = <span class="str">"Looking forward to the weekend!"</span>;
+}
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">text</span>);</div>
+        <div class="code-output" id="out-sw1"></div>
+      </div>
+      <div class="callout warn">⚠️ Forgetting <code>break</code> causes "fall-through" — execution continues into the next case. This is rarely what you want.</div>
+    </div>
+
+    <div class="section">
+      <h3>Quick quiz</h3>
+      <div class="quiz-card">
+        <h4>When should you prefer <code>switch</code> over <code>if/else if</code>?</h4>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="answer(this,'wrong','q4')">When you need to compare ranges (e.g. x &lt; 10)</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','q4')">When comparing one variable against many exact values</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q4')">switch is always better than if/else</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q4')">When you have only 2 conditions</div>
+        </div>
+        <div class="quiz-feedback" id="q4">✅ Correct! Switch shines when matching a single value against a set of known constants. For range checks, use if/else.</div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('objects')">← Objects</button>
+      <button class="nav-btn primary" onclick="goTo('loops')">Loops →</button>
+    </div>
+  </div>
+
+  <!-- ===== LOOPS ===== -->
+  <div class="module" id="mod-loops">
+    <div class="module-header">
+      <div class="module-badge">Module 7</div>
+      <div class="module-title">Loops</div>
+      <div class="module-sub">Four ways to repeat code: for, for...of, for...in, while, and do...while.</div>
+    </div>
+
+    <div class="section">
+      <h3>Loop types at a glance</h3>
+      <div class="compare-grid cols-2">
+        <div class="compare-card"><h4 class="yellow">for</h4><p>Classic index-based. Use when you need the index or control over step size.</p></div>
+        <div class="compare-card highlight"><h4 class="green">for...of</h4><p>Iterates values of an array. Clean and readable — the modern default.</p></div>
+        <div class="compare-card"><h4 class="yellow">for...in</h4><p>Iterates keys of an object. Don't use on arrays.</p></div>
+        <div class="compare-card"><h4 class="yellow">while / do...while</h4><p>Loop while a condition is true. <code>do...while</code> always runs at least once.</p></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>All four in action</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">loops.js</span><button class="run-btn" onclick="runCode('loops1')">▶ Run</button></div>
+        <div class="code-body" id="code-loops1"><span class="kw">const</span> <span class="var">cars</span> = [<span class="str">'Honda'</span>, <span class="str">'Toyota'</span>, <span class="str">'BMW'</span>];
+
+<span class="cmt">// 1. Classic for</span>
+<span class="kw">for</span> (<span class="kw">let</span> <span class="var">i</span> = <span class="num">0</span>; <span class="var">i</span> &lt; <span class="var">cars</span>.<span class="prop">length</span>; <span class="var">i</span>++) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'for:'</span>, <span class="var">cars</span>[<span class="var">i</span>]);
+}
+
+<span class="cmt">// 2. for...of (arrays)</span>
+<span class="kw">for</span> (<span class="kw">const</span> <span class="var">car</span> <span class="kw">of</span> <span class="var">cars</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'for...of:'</span>, <span class="var">car</span>);
+}
+
+<span class="cmt">// 3. for...in (objects)</span>
+<span class="kw">const</span> <span class="var">users</span> = { <span class="prop">user1</span>: <span class="str">'Tom'</span>, <span class="prop">user2</span>: <span class="str">'Paul'</span> };
+<span class="kw">for</span> (<span class="kw">const</span> <span class="var">key</span> <span class="kw">in</span> <span class="var">users</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'for...in:'</span>, <span class="var">users</span>[<span class="var">key</span>]);
+}
+
+<span class="cmt">// 4. while</span>
+<span class="kw">let</span> <span class="var">i</span> = <span class="num">0</span>;
+<span class="kw">while</span> (<span class="var">i</span> &lt; <span class="var">cars</span>.<span class="prop">length</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'while:'</span>, <span class="var">cars</span>[<span class="var">i</span>++]);
+}</div>
+        <div class="code-output" id="out-loops1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Challenge playground</h3>
+      <div class="playground">
+        <div class="playground-header"><span>🧪 Challenge: Loop 1–10, output only even numbers</span></div>
+        <textarea class="playground-code" id="pg-loops">// Solution using for loop and filter
+const nums = Array.from({ length: 10 }, (_, i) => i + 1);
+const evens = nums.filter(n => n % 2 === 0);
+console.log(evens);</textarea>
+        <button class="playground-run" onclick="runPlayground('pg-loops','pg-loops-out')">▶ Run</button>
+        <div class="playground-out" id="pg-loops-out">// output will appear here</div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('control')">← Control Structures</button>
+      <button class="nav-btn primary" onclick="goTo('functions')">Functions →</button>
+    </div>
+  </div>
+
+  <!-- ===== FUNCTIONS ===== -->
+  <div class="module" id="mod-functions">
+    <div class="module-header">
+      <div class="module-badge">Module 8</div>
+      <div class="module-title">Functions &amp; ES6 Features</div>
+      <div class="module-sub">Arrow functions, default arguments, and the ES6 features that changed everything.</div>
+    </div>
+
+    <div class="section">
+      <h3>Arrow functions</h3>
+      <p>Arrow functions are a concise way to write functions introduced in ES6. They also inherit <code>this</code> from the surrounding scope (lexical this).</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">arrow-functions.js</span><button class="run-btn" onclick="runCode('arr-fn1')">▶ Run</button></div>
+        <div class="code-body" id="code-arr-fn1"><span class="cmt">// Traditional</span>
+<span class="kw">const</span> <span class="var">add1</span> = <span class="kw">function</span>(<span class="var">a</span>, <span class="var">b</span>) { <span class="kw">return</span> <span class="var">a</span> + <span class="var">b</span>; };
+
+<span class="cmt">// Arrow function</span>
+<span class="kw">const</span> <span class="var">add2</span> = (<span class="var">a</span>, <span class="var">b</span>) <span class="op">=></span> { <span class="kw">return</span> <span class="var">a</span> + <span class="var">b</span>; };
+
+<span class="cmt">// Implicit return (no braces needed for single expression)</span>
+<span class="kw">const</span> <span class="var">add3</span> = (<span class="var">a</span>, <span class="var">b</span>) <span class="op">=></span> <span class="var">a</span> + <span class="var">b</span>;
+
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">add1</span>(<span class="num">2</span>, <span class="num">3</span>)); <span class="cmt">// 5</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">add2</span>(<span class="num">2</span>, <span class="num">3</span>)); <span class="cmt">// 5</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">add3</span>(<span class="num">2</span>, <span class="num">3</span>)); <span class="cmt">// 5</span>
+
+<span class="cmt">// Arrow function with default parameters</span>
+<span class="kw">const</span> <span class="var">greet</span> = (<span class="var">name</span> = <span class="str">'World'</span>) <span class="op">=></span> <span class="str">`Hello, <span class="op">${</span><span class="var">name</span><span class="op">}</span>!`</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">greet</span>());           <span class="cmt">// Hello, World!</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">greet</span>(<span class="str">'Keshav'</span>));  <span class="cmt">// Hello, Keshav!</span></div>
+        <div class="code-output" id="out-arr-fn1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Default parameters (ES6)</h3>
+      <div class="compare-grid cols-2">
+        <div class="compare-card">
+          <h4 class="red">Old way</h4>
+          <div class="code-block" style="margin:0"><div class="code-body" style="font-size:12px"><span class="kw">function</span> <span class="fn">calcTotal</span>(<span class="var">sub</span>, <span class="var">tax</span>, <span class="var">ship</span>) {
+  <span class="kw">if</span> (<span class="var">tax</span> === <span class="kw">undefined</span>) <span class="var">tax</span> = <span class="num">0.07</span>;
+  <span class="kw">if</span> (<span class="var">ship</span> === <span class="kw">undefined</span>) <span class="var">ship</span> = <span class="num">10</span>;
+  <span class="kw">return</span> <span class="var">sub</span> + <span class="var">ship</span> + (<span class="var">sub</span> * <span class="var">tax</span>);
+}</div></div>
+        </div>
+        <div class="compare-card highlight">
+          <h4 class="green">ES6 defaults</h4>
+          <div class="code-block" style="margin:0"><div class="code-body" style="font-size:12px"><span class="kw">function</span> <span class="fn">calcTotal</span>(
+  <span class="var">sub</span>,
+  <span class="var">tax</span> = <span class="num">0.07</span>,
+  <span class="var">ship</span> = <span class="num">10</span>
+) {
+  <span class="kw">return</span> <span class="var">sub</span> + <span class="var">ship</span> + (<span class="var">sub</span> * <span class="var">tax</span>);
+}</div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Challenge</h3>
+      <div class="playground">
+        <div class="playground-header"><span>🧪 Write a function that finds the largest of 3 numbers</span></div>
+        <textarea class="playground-code" id="pg-functions">const findLargest = (a, b, c) => {
+  // Your solution here
+  return Math.max(a, b, c);
+};
+
+console.log(findLargest(1, 7, 3));   // 7
+console.log(findLargest(10, 2, 9));  // 10</textarea>
+        <button class="playground-run" onclick="runPlayground('pg-functions','pg-functions-out')">▶ Run</button>
+        <div class="playground-out" id="pg-functions-out">// output will appear here</div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('loops')">← Loops</button>
+      <button class="nav-btn primary" onclick="goTo('spread')">Spread &amp; Rest →</button>
+    </div>
+  </div>
+
+  <!-- ===== SPREAD & REST ===== -->
+  <div class="module" id="mod-spread">
+    <div class="module-header">
+      <div class="module-badge">Module 9</div>
+      <div class="module-title">Spread &amp; Rest Operators</div>
+      <div class="module-sub">The <code>...</code> operator — two names, two uses, one powerful syntax.</div>
+    </div>
+
+    <div class="section">
+      <h3>Spread operator <code>...</code></h3>
+      <p>Spread <em>expands</em> an array or object into individual elements.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">spread.js</span><button class="run-btn" onclick="runCode('spread1')">▶ Run</button></div>
+        <div class="code-body" id="code-spread1"><span class="cmt">// Combine arrays</span>
+<span class="kw">const</span> <span class="var">a</span> = [<span class="str">'one'</span>, <span class="str">'two'</span>];
+<span class="kw">const</span> <span class="var">b</span> = [<span class="str">'three'</span>, <span class="str">'four'</span>];
+<span class="kw">const</span> <span class="var">combined</span> = [...<span class="var">a</span>, ...<span class="var">b</span>];
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">combined</span>);
+
+<span class="cmt">// Insert at any position</span>
+<span class="kw">const</span> <span class="var">inserted</span> = [<span class="str">'zero'</span>, ...<span class="var">a</span>, <span class="str">'two-and-half'</span>, ...<span class="var">b</span>];
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">inserted</span>);
+
+<span class="cmt">// Copy an array (no mutation!)</span>
+<span class="kw">const</span> <span class="var">copy</span> = [...<span class="var">a</span>];
+<span class="var">copy</span>.<span class="fn">push</span>(<span class="str">'added'</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'original:'</span>, <span class="var">a</span>);
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'copy:'</span>, <span class="var">copy</span>);
+
+<span class="cmt">// Spread into function arguments</span>
+<span class="kw">const</span> <span class="var">nums</span> = [<span class="num">5</span>, <span class="num">2</span>, <span class="num">9</span>, <span class="num">1</span>];
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'max:'</span>, Math.<span class="fn">max</span>(...<span class="var">nums</span>));</div>
+        <div class="code-output" id="out-spread1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Rest operator <code>...</code></h3>
+      <p>Rest <em>collects</em> remaining arguments into an array. Used in function parameters and destructuring.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">rest.js</span><button class="run-btn" onclick="runCode('rest1')">▶ Run</button></div>
+        <div class="code-body" id="code-rest1"><span class="cmt">// Rest in function params</span>
+<span class="kw">function</span> <span class="fn">doMath</span>(<span class="var">operator</span>, ...<span class="var">numbers</span>) {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'operator:'</span>, <span class="var">operator</span>);
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'numbers:'</span>, <span class="var">numbers</span>);
+  <span class="kw">if</span> (<span class="var">operator</span> === <span class="str">'add'</span>) {
+    <span class="kw">return</span> <span class="var">numbers</span>.<span class="fn">reduce</span>((<span class="var">sum</span>, <span class="var">n</span>) <span class="op">=></span> <span class="var">sum</span> + <span class="var">n</span>, <span class="num">0</span>);
+  }
+}
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">doMath</span>(<span class="str">'add'</span>, <span class="num">1</span>, <span class="num">2</span>, <span class="num">3</span>, <span class="num">4</span>));
+
+<span class="cmt">// Rest in destructuring</span>
+<span class="kw">const</span> [<span class="var">first</span>, <span class="var">second</span>, ...<span class="var">rest</span>] = [<span class="str">'Kevin'</span>, <span class="str">'Bobby'</span>, <span class="str">'Nicole'</span>, <span class="str">'Naomi'</span>];
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">first</span>);  <span class="cmt">// Kevin</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">second</span>); <span class="cmt">// Bobby</span>
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="var">rest</span>);   <span class="cmt">// ["Nicole", "Naomi"]</span></div>
+        <div class="code-output" id="out-rest1"></div>
+      </div>
+      <div class="callout info">ℹ️ <strong>Same syntax, different direction:</strong> Spread expands. Rest collects. The key is <em>position</em>: spread appears in a function <em>call</em> or array literal; rest appears in a function <em>definition</em> or destructuring <em>pattern</em>.</div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('functions')">← Functions</button>
+      <button class="nav-btn primary" onclick="goTo('promises')">Promises →</button>
+    </div>
+  </div>
+
+  <!-- ===== PROMISES ===== -->
+  <div class="module" id="mod-promises">
+    <div class="module-header">
+      <div class="module-badge">Module 10</div>
+      <div class="module-title">Promises &amp; Async/Await</div>
+      <div class="module-sub">Handling asynchronous operations — the modern way to work with APIs and timers.</div>
+    </div>
+
+    <div class="section">
+      <h3>What is a Promise?</h3>
+      <p>A Promise represents a value that may be available now, later, or never. It can be in one of three states:</p>
+      <div class="diagram">
+        <div class="promise-flow">
+          <div style="text-align:center">
+            <div class="promise-state pending">⏳ Pending</div>
+            <div class="promise-label">Initial state</div>
+          </div>
+          <div class="promise-arrow">→</div>
+          <div style="text-align:center">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div class="promise-state resolved">✅ Fulfilled</div>
+              <div class="promise-state rejected">❌ Rejected</div>
+            </div>
+          </div>
+          <div class="promise-arrow">→</div>
+          <div style="text-align:center">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <div style="font-size:13px;color:#6dd4dc;background:rgba(109,212,220,.1);padding:6px 12px;border-radius:6px">.then(data => ...)</div>
+              <div style="font-size:13px;color:#e07090;background:rgba(196,69,112,.1);padding:6px 12px;border-radius:6px">.catch(err => ...)</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Creating &amp; chaining Promises</h3>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">promises.js</span><button class="run-btn" onclick="runCode('prom1')">▶ Run</button></div>
+        <div class="code-body" id="code-prom1"><span class="cmt">// Create a promise that resolves</span>
+<span class="kw">const</span> <span class="var">p1</span> = <span class="kw">new</span> <span class="fn">Promise</span>((<span class="var">resolve</span>, <span class="var">reject</span>) <span class="op">=></span> {
+  <span class="fn">resolve</span>(<span class="str">'Learn JavaScript Deeply!'</span>);
+});
+<span class="var">p1</span>.<span class="fn">then</span>(<span class="var">data</span> <span class="op">=></span> <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'resolved:'</span>, <span class="var">data</span>));
+
+<span class="cmt">// Create a promise that rejects</span>
+<span class="kw">const</span> <span class="var">p2</span> = <span class="kw">new</span> <span class="fn">Promise</span>((<span class="var">resolve</span>, <span class="var">reject</span>) <span class="op">=></span> {
+  <span class="fn">reject</span>(<span class="kw">new</span> <span class="fn">Error</span>(<span class="str">'Something went wrong!'</span>));
+});
+<span class="var">p2</span>
+  .<span class="fn">then</span>(<span class="var">data</span> <span class="op">=></span> <span class="fn">console</span>.<span class="fn">log</span>(<span class="var">data</span>))
+  .<span class="fn">catch</span>(<span class="var">err</span> <span class="op">=></span> <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'caught:'</span>, <span class="var">err</span>.<span class="prop">message</span>));</div>
+        <div class="code-output" id="out-prom1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>async / await</h3>
+      <p><code>async/await</code> is syntactic sugar over Promises — it makes async code look and read like synchronous code.</p>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">async-await.js</span><button class="run-btn" onclick="runCode('async1')">▶ Run</button></div>
+        <div class="code-body" id="code-async1"><span class="cmt">// Helper: returns a promise after a delay</span>
+<span class="kw">const</span> <span class="var">wait</span> = (<span class="var">ms</span>, <span class="var">val</span>) <span class="op">=></span> <span class="kw">new</span> <span class="fn">Promise</span>(<span class="var">res</span> <span class="op">=></span> <span class="fn">setTimeout</span>(() <span class="op">=></span> <span class="fn">res</span>(<span class="var">val</span>), <span class="var">ms</span>));
+
+<span class="cmt">// async function — always returns a Promise</span>
+<span class="kw">const</span> <span class="var">runExample</span> = <span class="kw">async</span> () <span class="op">=></span> {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'Starting...'</span>);
+
+  <span class="cmt">// await pauses execution until the Promise resolves</span>
+  <span class="kw">const</span> <span class="var">result</span> = <span class="kw">await</span> <span class="fn">wait</span>(<span class="num">100</span>, <span class="str">'Step 1 done'</span>);
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="var">result</span>);
+
+  <span class="kw">const</span> <span class="var">result2</span> = <span class="kw">await</span> <span class="fn">wait</span>(<span class="num">100</span>, <span class="str">'Step 2 done'</span>);
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="var">result2</span>);
+
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'All done!'</span>);
+};
+
+<span class="var">runExample</span>();</div>
+        <div class="code-output" id="out-async1"></div>
+      </div>
+      <div class="callout tip">💡 Always wrap <code>await</code> in a <code>try/catch</code> in production code to handle rejected promises gracefully.</div>
+    </div>
+
+    <div class="section">
+      <h3>Quick quiz</h3>
+      <div class="quiz-card">
+        <h4>What happens if you use <code>await</code> outside an <code>async</code> function?</h4>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="answer(this,'wrong','q5')">It works fine in modern JS</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q5')">It returns undefined</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','q5')">SyntaxError — await is only valid inside async functions</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q5')">The code just runs synchronously</div>
+        </div>
+        <div class="quiz-feedback" id="q5">✅ Correct! <code>await</code> must be inside an <code>async</code> function (except at the top level of ES modules).</div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('spread')">← Spread &amp; Rest</button>
+      <button class="nav-btn primary" onclick="goTo('classes')">Classes &amp; Modules →</button>
+    </div>
+  </div>
+
+  <!-- ===== CLASSES & MODULES ===== -->
+  <div class="module" id="mod-classes">
+    <div class="module-header">
+      <div class="module-badge">Module 11</div>
+      <div class="module-title">Classes &amp; Modules</div>
+      <div class="module-sub">Object-oriented programming in ES6 and how to organise code across files.</div>
+    </div>
+
+    <div class="section">
+      <h3>Classes &amp; Inheritance</h3>
+      <div class="class-diagram">
+        <div class="class-box">
+          <div class="class-name">Animal</div>
+          <div class="class-body">
+            <div style="color:var(--accent2)">constructor(name)</div>
+            <div>speak() → logs noise</div>
+          </div>
+        </div>
+        <div class="class-arrow">↓</div>
+        <div class="extends-label">extends (inherits)</div>
+        <div class="class-arrow">↓</div>
+        <div class="class-box">
+          <div class="class-name" style="background:#E8B84B;color:#0c1828">Dog</div>
+          <div class="class-body">
+            <div style="color:var(--accent2)">constructor(name, breed)</div>
+            <div>set year(year)</div>
+            <div>get age() → calculates</div>
+            <div>speak() → overrides Animal</div>
+          </div>
+        </div>
+      </div>
+      <div class="code-block">
+        <div class="code-header"><span class="code-title">classes.js</span><button class="run-btn" onclick="runCode('cls1')">▶ Run</button></div>
+        <div class="code-body" id="code-cls1"><span class="kw">class</span> <span class="fn">Animal</span> {
+  <span class="fn">constructor</span>(<span class="var">name</span>) { <span class="kw">this</span>.<span class="prop">name</span> = <span class="var">name</span>; }
+  <span class="fn">speak</span>() { <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`<span class="op">${</span><span class="kw">this</span>.<span class="prop">name</span><span class="op">}</span> makes a noise.`</span>); }
+}
+
+<span class="kw">class</span> <span class="fn">Dog</span> <span class="kw">extends</span> <span class="fn">Animal</span> {
+  <span class="fn">constructor</span>(<span class="var">name</span>, <span class="var">breed</span>) {
+    <span class="kw">super</span>(<span class="var">name</span>); <span class="cmt">// calls Animal's constructor</span>
+    <span class="kw">this</span>.<span class="prop">breed</span> = <span class="var">breed</span>;
+    <span class="kw">this</span>.<span class="prop">birthYear</span> = <span class="kw">null</span>;
+  }
+  <span class="kw">set</span> <span class="fn">year</span>(<span class="var">y</span>) { <span class="kw">this</span>.<span class="prop">birthYear</span> = <span class="var">y</span>; }
+  <span class="kw">get</span> <span class="fn">age</span>() {
+    <span class="kw">if</span> (!<span class="kw">this</span>.<span class="prop">birthYear</span>) <span class="kw">return</span> <span class="kw">null</span>;
+    <span class="kw">return</span> <span class="kw">new</span> <span class="fn">Date</span>().<span class="fn">getFullYear</span>() - <span class="kw">this</span>.<span class="prop">birthYear</span>;
+  }
+  <span class="fn">speak</span>() { <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`<span class="op">${</span><span class="kw">this</span>.<span class="prop">name</span><span class="op">}</span> barks!`</span>); }
+}
+
+<span class="kw">const</span> <span class="var">puppy</span> = <span class="kw">new</span> <span class="fn">Dog</span>(<span class="str">'Spot'</span>, <span class="str">'Doberman'</span>);
+<span class="var">puppy</span>.<span class="prop">year</span> = <span class="num">2020</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="str">`<span class="op">${</span><span class="var">puppy</span>.<span class="prop">name</span><span class="op">}</span>'s age: <span class="op">${</span><span class="var">puppy</span>.<span class="prop">age</span><span class="op">}</span>`</span>);
+<span class="var">puppy</span>.<span class="fn">speak</span>();</div>
+        <div class="code-output" id="out-cls1"></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>ES6 Modules</h3>
+      <p>Modules let you split code across files. Two styles: named exports (multiple per file) and default exports (one per file).</p>
+      <div class="compare-grid cols-2">
+        <div class="compare-card">
+          <h4 class="yellow" style="margin-bottom:8px">Named exports</h4>
+          <div class="code-block" style="margin:0"><div class="code-body" style="font-size:12px"><span class="cmt">// mathlib.js</span>
+<span class="kw">export function</span> <span class="fn">square</span>(<span class="var">x</span>) {
+  <span class="kw">return</span> <span class="var">x</span> * <span class="var">x</span>;
+}
+<span class="kw">export function</span> <span class="fn">add</span>(<span class="var">x</span>, <span class="var">y</span>) {
+  <span class="kw">return</span> <span class="var">x</span> + <span class="var">y</span>;
+}
+
+<span class="cmt">// main.js</span>
+<span class="kw">import</span> { <span class="var">square</span>, <span class="var">add</span> } <span class="kw">from</span> <span class="str">'./mathlib'</span>;
+<span class="fn">console</span>.<span class="fn">log</span>(<span class="fn">square</span>(<span class="num">9</span>)); <span class="cmt">// 81</span></div></div>
+        </div>
+        <div class="compare-card highlight">
+          <h4 class="green" style="margin-bottom:8px">Default export</h4>
+          <div class="code-block" style="margin:0"><div class="code-body" style="font-size:12px"><span class="cmt">// foo.js</span>
+<span class="kw">export default function</span>() {
+  <span class="fn">console</span>.<span class="fn">log</span>(<span class="str">'Foo!'</span>);
+}
+
+<span class="cmt">// main.js</span>
+<span class="kw">import</span> <span class="var">foo</span> <span class="kw">from</span> <span class="str">'./foo'</span>;
+<span class="fn">foo</span>(); <span class="cmt">// Foo!</span></div></div>
+        </div>
+      </div>
+      <div class="callout info">ℹ️ A file can have many named exports but only one default export. Named exports must be imported with <code>{}</code>; default exports are imported with any name you choose.</div>
+    </div>
+
+    <div class="section">
+      <h3>What is ES6?</h3>
+      <p>ES stands for ECMAScript — the standard JavaScript is based on. ES6 (2015) was a massive update that introduced most of the features we've covered: let/const, arrow functions, template literals, destructuring, classes, modules, promises, and more.</p>
+      <div class="compare-grid cols-2" style="margin-top:12px">
+        <div class="compare-card"><p><span class="pill blue">ES6 / 2015</span> let, const, arrow functions, classes, modules, promises, template literals, destructuring, spread/rest, default params</p></div>
+        <div class="compare-card"><p><span class="pill green">ES7–ES15</span> async/await (ES8), optional chaining, nullish coalescing, Array.at(), Object.hasOwn(), and more refinements each year</p></div>
+      </div>
+    </div>
+
+    <div class="section">
+      <h3>Final quiz</h3>
+      <div class="quiz-card">
+        <h4>What does <code>super(name)</code> do inside a subclass constructor?</h4>
+        <div class="quiz-options">
+          <div class="quiz-opt" onclick="answer(this,'wrong','q6')">Calls a method named "super" on the parent</div>
+          <div class="quiz-opt" onclick="answer(this,'correct','q6')">Calls the parent class's constructor with the given arguments</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q6')">Creates a new instance of the parent class</div>
+          <div class="quiz-opt" onclick="answer(this,'wrong','q6')">Returns the parent class</div>
+        </div>
+        <div class="quiz-feedback" id="q6">✅ Correct! <code>super()</code> invokes the parent constructor. It must be called before accessing <code>this</code> in a subclass.</div>
+      </div>
+    </div>
+
+    <div class="module-nav">
+      <button class="nav-btn" onclick="goTo('promises')">← Promises</button>
+      <button class="nav-btn primary" onclick="goTo('playground')">🚀 Try the Playground →</button>
+    </div>
+  </div>
+
+  <!-- ===== PLAYGROUND ===== -->
+  <div class="module" id="mod-playground" style="max-width:100%;padding:0;height:100vh;display:none;flex-direction:column;">
+    <div id="pg-shell">
+      <!-- TOP BAR -->
+      <div id="pg-topbar">
+        <div id="pg-topbar-left">
+          <span id="pg-logo">🚀</span>
+          <div>
+            <div id="pg-title">Free Playground</div>
+            <div id="pg-subtitle">Write any JavaScript and run it instantly</div>
+          </div>
+        </div>
+        <div id="pg-topbar-right">
+          <button class="pg-btn pg-btn-ghost" onclick="pgClear()" title="Clear editor">Clear</button>
+          <button class="pg-btn pg-btn-ghost" onclick="pgReset()" title="Reset to default snippet">Reset</button>
+          <button class="pg-btn pg-btn-run" onclick="pgRun()" title="Run (Ctrl+Enter)">▶ Run <kbd>Ctrl↵</kbd></button>
+        </div>
+      </div>
+
+      <!-- PRESET CHIPS -->
+      <div id="pg-presets">
+        <span id="pg-preset-label">Load snippet:</span>
+        <button class="pg-chip" onclick="pgLoad('blank')">Blank</button>
+        <button class="pg-chip" onclick="pgLoad('variables')">Variables</button>
+        <button class="pg-chip" onclick="pgLoad('array-methods')">Array methods</button>
+        <button class="pg-chip" onclick="pgLoad('objects')">Objects</button>
+        <button class="pg-chip" onclick="pgLoad('arrow-fn')">Arrow functions</button>
+        <button class="pg-chip" onclick="pgLoad('promise')">Promises</button>
+        <button class="pg-chip" onclick="pgLoad('class')">Classes</button>
+        <button class="pg-chip pg-chip-challenge" onclick="pgLoad('challenge1')">🏆 Challenge 1</button>
+        <button class="pg-chip pg-chip-challenge" onclick="pgLoad('challenge2')">🏆 Challenge 2</button>
+        <button class="pg-chip pg-chip-challenge" onclick="pgLoad('challenge3')">🏆 Challenge 3</button>
+      </div>
+
+      <!-- EDITOR + OUTPUT SPLIT -->
+      <div id="pg-split">
+        <!-- EDITOR PANE -->
+        <div id="pg-editor-pane">
+          <div class="pg-pane-header">
+            <span class="pg-pane-title">📄 editor.js</span>
+            <span id="pg-status"></span>
+          </div>
+          <div id="pg-editor-wrap">
+            <div id="pg-line-nums" aria-hidden="true"></div>
+            <textarea id="pg-editor" spellcheck="false" autocomplete="off" autocorrect="off" autocapitalize="off"></textarea>
+          </div>
+        </div>
+
+        <!-- DIVIDER -->
+        <div id="pg-divider"></div>
+
+        <!-- OUTPUT PANE -->
+        <div id="pg-output-pane">
+          <div class="pg-pane-header">
+            <span class="pg-pane-title">📟 console</span>
+            <div style="display:flex;gap:8px;align-items:center">
+              <span id="pg-run-count"></span>
+              <button class="pg-btn pg-btn-ghost pg-btn-sm" onclick="pgClearOutput()">Clear</button>
+            </div>
+          </div>
+          <div id="pg-output">
+            <div class="pg-out-hint">Press <strong>▶ Run</strong> or <strong>Ctrl+Enter</strong> to execute your code.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ═══ FLOATING PLAYGROUND BUTTON ═══════════════════════════════════════════ -->
+<button id="float-pg-btn" onclick="floatPgToggle()" title="Open Playground">
+  <span id="float-pg-icon">⚡</span>
+  <span id="float-pg-label">Playground</span>
+</button>
+
+<!-- ═══ FLOATING PLAYGROUND PANEL ════════════════════════════════════════════ -->
+<div id="float-pg-panel">
+  <!-- DRAG HANDLE / TITLE BAR -->
+  <div id="float-pg-titlebar" onmousedown="floatPgDragStart(event)">
+    <div id="float-pg-tbar-left">
+      <span style="font-size:14px">⚡</span>
+      <span id="float-pg-tbar-title">JS Playground</span>
+      <div id="float-pg-snippets-wrap">
+        <select id="float-pg-snippet-sel" onchange="floatPgLoadSnippet(this.value)" title="Load a snippet">
+          <option value="">— snippets —</option>
+          <option value="blank">Blank</option>
+          <option value="variables">Variables</option>
+          <option value="array-methods">Array methods</option>
+          <option value="objects">Objects</option>
+          <option value="arrow-fn">Arrow functions</option>
+          <option value="promise">Promises</option>
+          <option value="class">Classes</option>
+          <optgroup label="Challenges">
+            <option value="challenge1">🏆 Challenge 1</option>
+            <option value="challenge2">🏆 Challenge 2</option>
+            <option value="challenge3">🏆 Challenge 3</option>
+          </optgroup>
+        </select>
+      </div>
+    </div>
+    <div id="float-pg-tbar-right">
+      <button class="float-pg-tbtn" onclick="floatPgClearOutput()" title="Clear output">⌫</button>
+      <button class="float-pg-tbtn float-pg-run-btn" onclick="floatPgRun()" title="Run (Ctrl+Enter)">▶ Run</button>
+      <button class="float-pg-tbtn" onclick="floatPgFullscreen()" id="float-pg-fs-btn" title="Fullscreen (F11)">⛶</button>
+      <button class="float-pg-tbtn" onclick="floatPgMinimise()" id="float-pg-min-btn" title="Minimise">—</button>
+      <button class="float-pg-tbtn" onclick="floatPgToggle()" title="Close">✕</button>
+    </div>
+  </div>
+
+  <!-- BODY: editor + output stacked -->
+  <div id="float-pg-body">
+    <!-- EDITOR -->
+    <div id="float-pg-editor-wrap">
+      <div id="float-pg-line-nums" aria-hidden="true"></div>
+      <textarea id="float-pg-editor" spellcheck="false" autocomplete="off"
+        placeholder="// Write JS here and press ▶ Run or Ctrl+Enter"></textarea>
+    </div>
+
+    <!-- RESIZE BAR between editor and output -->
+    <div id="float-pg-vdivider" onmousedown="floatPgVDragStart(event)" title="Drag to resize"></div>
+
+    <!-- OUTPUT -->
+    <div id="float-pg-output-wrap">
+      <div id="float-pg-output-header">
+        <span style="font-size:11px;color:var(--text-muted);font-family:monospace">console</span>
+        <span id="float-pg-run-info"></span>
+      </div>
+      <div id="float-pg-output">
+        <div class="pg-out-hint">Press <strong>▶ Run</strong> or <strong>Ctrl+Enter</strong></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESIZE HANDLE (bottom-right corner) -->
+  <div id="float-pg-resize-handle" onmousedown="floatPgResizeStart(event)" title="Drag to resize"></div>
+</div>
+
+<script>
+// ─── STATE ────────────────────────────────────────────────────────────────────
+const ORDER = ['intro','variables','datatypes','strings','arrays','objects','control','loops','functions','spread','promises','classes'];
+const visited = new Set();
+
+function goTo(id) {
+  document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  const mod = document.getElementById('mod-' + id);
+  mod.classList.add('active');
+  const navEl = document.querySelector(`[data-module="${id}"]`);
+  if (navEl) navEl.classList.add('active');
+  // Playground takes full height — don't scroll main, it manages its own overflow
+  if (id !== 'playground') document.getElementById('main').scrollTop = 0;
+  markVisited(id);
+}
+
+function markVisited(id) {
+  visited.add(id);
+  const chk = document.getElementById('chk-' + id);
+  if (chk) { chk.textContent = '✓'; chk.style.color = 'var(--accent3)'; }
+  const total = ORDER.length - 1; // exclude intro
+  const done = ORDER.filter(m => m !== 'intro' && visited.has(m)).length;
+  document.getElementById('progress-text').textContent = `${done} / ${total}`;
+  document.getElementById('progress-fill').style.width = `${(done / total) * 100}%`;
+}
+
+// ─── CODE RUNNER ─────────────────────────────────────────────────────────────
+function runCode(id) {
+  const codeEl = document.getElementById('code-' + id);
+  const outEl = document.getElementById('out-' + id);
+  const raw = codeEl.innerText;
+  const logs = [];
+  const origLog = console.log;
+  const origErr = console.error;
+  console.log = (...args) => logs.push(args.map(a => {
+    if (typeof a === 'object') try { return JSON.stringify(a); } catch(e) { return String(a); }
+    return String(a);
+  }).join(' '));
+  console.error = (...args) => logs.push('ERROR: ' + args.join(' '));
+  try {
+    eval(raw.replace(/<[^>]+>/g, ''));
+    outEl.textContent = logs.join('\n') || '(no output)';
+    outEl.className = 'code-output show';
+  } catch(e) {
+    outEl.textContent = '❌ ' + e.message;
+    outEl.className = 'code-output error show';
+  }
+  console.log = origLog;
+  console.error = origErr;
+}
+
+function runPlayground(inputId, outputId) {
+  const code = document.getElementById(inputId).value;
+  const outEl = document.getElementById(outputId);
+  const result = captureAndRun(code);
+  if (result.err) {
+    outEl.style.color = '';
+    outEl.innerHTML = renderErrorCard(result.err, code);
+  } else {
+    outEl.style.color = 'var(--accent3)';
+    outEl.textContent = result.entries.map(e => e.text).join('\n') || '✓ (no output)';
+  }
+}
+
+// ─── QUIZ ────────────────────────────────────────────────────────────────────
+function answer(el, result, qid) {
+  const card = el.closest('.quiz-card');
+  const opts = card.querySelectorAll('.quiz-opt');
+  opts.forEach(o => o.style.pointerEvents = 'none');
+  el.classList.add(result === 'correct' ? 'correct' : 'wrong');
+  const fb = document.getElementById(qid);
+  fb.classList.add('show');
+  if (result === 'correct') {
+    fb.classList.add('ok');
+  } else {
+    fb.classList.add('fail');
+    fb.textContent = '❌ Not quite. ' + fb.textContent.replace(/^[✅❌]\s*/, '');
+    // Find correct one and highlight
+    opts.forEach(o => {
+      if (o !== el) {
+        const tempFn = (opt) => { opt.classList.add('correct'); };
+        // Re-call on the correct answer
+      }
+    });
+  }
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+markVisited('intro');
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FLOATING PLAYGROUND
+// ═══════════════════════════════════════════════════════════════════════════════
+let floatRunCount = 0;
+let floatPanelOpen = false;
+let floatMinimised = false;
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SHARED ERROR ANALYSIS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const ERROR_HINTS = {
+  SyntaxError: [
+    { match: 'Unexpected end of input',          hint: 'A bracket <code>{}</code>, parenthesis <code>()</code>, or bracket <code>[]</code> was opened but never closed. Count your opening and closing pairs.' },
+    { match: 'Unexpected token',                 hint: 'There\'s a character the parser didn\'t expect. Common causes: a missing comma, an extra brace, or a typo in a keyword.' },
+    { match: 'Invalid or unexpected token',      hint: 'Check for stray characters, unclosed strings (missing quote), or invalid escape sequences.' },
+    { match: 'Missing ) after argument list',    hint: 'A function call is missing its closing parenthesis <code>)</code>.' },
+    { match: 'Identifier has already been declared', hint: 'You declared the same variable name twice with <code>let</code> or <code>const</code> in the same scope. Rename one, or use a block <code>{}</code> to create a new scope.' },
+    { match: '',                                 hint: 'Your code has a syntax problem. Read the message carefully — the position it mentions is usually right at or just before the problem.' },
+  ],
+  ReferenceError: [
+    { match: 'is not defined',                   hint: 'The variable or function you\'re using hasn\'t been declared yet. Check spelling, make sure you declared it with <code>const</code>/<code>let</code>, and that it\'s in scope.' },
+    { match: 'Cannot access',                    hint: 'You\'re trying to read a <code>let</code>/<code>const</code> variable before it\'s been initialised (Temporal Dead Zone). Move the declaration above where you use it.' },
+    { match: '',                                 hint: 'A name used in the code doesn\'t exist in the current scope.' },
+  ],
+  TypeError: [
+    { match: 'is not a function',                hint: 'You\'re calling something as if it were a function, but it\'s not. Check that the variable actually holds a function, and that you spelled the method name correctly.' },
+    { match: 'Cannot read propert',              hint: 'You\'re trying to access a property on <code>null</code> or <code>undefined</code>. Add a guard: <code>if (obj) { ... }</code> or use optional chaining <code>obj?.prop</code>.' },
+    { match: 'Cannot set propert',               hint: 'You\'re trying to set a property on <code>null</code> or <code>undefined</code>. Make sure the object is initialised before you assign to it.' },
+    { match: 'is not iterable',                  hint: 'You\'re trying to loop or spread over a value that isn\'t iterable (null, undefined, a number, etc.). Check the value is an array or string first.' },
+    { match: 'Assignment to constant variable',  hint: 'You declared this with <code>const</code> and tried to reassign it. Use <code>let</code> if you need to change the value later.' },
+    { match: 'Converting circular structure',    hint: 'Your object has a circular reference (object A contains object B which contains A). <code>JSON.stringify</code> can\'t handle that directly.' },
+    { match: '',                                 hint: 'A value is of the wrong type for the operation you\'re attempting. Use <code>typeof</code> or <code>console.log</code> to inspect what the value actually is.' },
+  ],
+  RangeError: [
+    { match: 'Maximum call stack',               hint: 'Infinite recursion — a function keeps calling itself without ever stopping. Check that your recursive function has a working base case that is actually reached.' },
+    { match: 'Invalid array length',             hint: 'You\'re trying to create an array with a negative or non-integer length.' },
+    { match: '',                                 hint: 'A number is outside the range allowed for the operation.' },
+  ],
+};
+
+function analyzeError(err, code) {
+  const lines = code.split('\n');
+  const type = err.constructor ? err.constructor.name : 'Error';
+  const message = err.message || String(err);
+
+  // ── Extract line number from stack trace ───────────────────────────────────
+  let lineNum = null;
+  const stack = err.stack || '';
+  // Chrome/Edge: "<anonymous>:3:5" or "eval at ...:3:5"
+  const m = stack.match(/<anonymous>:(\d+):\d+/) ||
+            stack.match(/at eval[^:]*:(\d+):\d+/) ||
+            stack.match(/:(\d+):\d+\)?\s*$/m);
+  if (m) {
+    // eval wraps the code in a function body — offset is usually 2 lines in Firefox, 1 in Chrome
+    const raw = parseInt(m[1]);
+    // Try raw, raw-1, raw-2
+    for (const candidate of [raw, raw - 1, raw - 2]) {
+      if (candidate >= 1 && candidate <= lines.length) { lineNum = candidate; break; }
+    }
+  }
+
+  // ── Match hint ─────────────────────────────────────────────────────────────
+  let hint = null;
+  const hintList = ERROR_HINTS[type] || ERROR_HINTS['TypeError'];
+  for (const h of hintList) {
+    if (message.includes(h.match)) { hint = h.hint; break; }
+  }
+
+  // ── Extract the offending line ─────────────────────────────────────────────
+  let lineContent = null;
+  let lineContext = [];
+  if (lineNum) {
+    lineContent = lines[lineNum - 1];
+    // 2 lines of context around the error
+    for (let i = Math.max(0, lineNum - 2); i <= Math.min(lines.length - 1, lineNum); i++) {
+      lineContext.push({ n: i + 1, code: lines[i], highlight: i === lineNum - 1 });
+    }
+  }
+
+  return { type, message, lineNum, lineContent, lineContext, hint };
+}
+
+function renderErrorCard(err, code) {
+  const info = analyzeError(err, code);
+  let html = `<div class="pg-error-card">`;
+  html += `<div class="pg-error-header">
+    <span class="pg-error-type-badge">${escHtml(info.type)}</span>
+    <span class="pg-error-msg">${escHtml(info.message)}</span>
+  </div>`;
+  if (info.lineNum) {
+    html += `<div class="pg-error-location">📍 Line ${info.lineNum}</div>`;
+  }
+  if (info.lineContext.length) {
+    html += `<div class="pg-error-line-preview">`;
+    info.lineContext.forEach(row => {
+      const marker = row.highlight ? '<span style="color:#f090b0;font-weight:700">→ </span>' : '  ';
+      const lineNum = String(row.n).padStart(2, ' ');
+      const style   = row.highlight ? 'color:#fda4af' : 'color:#4a6a88';
+      html += `<span style="${style}">${lineNum} ${marker}${escHtml(row.code)}</span>\n`;
+    });
+    html += `</div>`;
+  }
+  if (info.hint) {
+    html += `<div class="pg-error-hint">💡 ${info.hint}</div>`;
+  }
+  html += `</div>`;
+  return html;
+}
+
+// ── Open / close ──────────────────────────────────────────────────────────────
+function floatPgToggle() {
+  const panel = document.getElementById('float-pg-panel');
+  const btn   = document.getElementById('float-pg-btn');
+  floatPanelOpen = !floatPanelOpen;
+  if (floatPanelOpen) {
+    floatMinimised = false;
+    panel.classList.remove('minimised');
+    panel.classList.add('visible');
+    btn.classList.add('open');
+    document.getElementById('float-pg-label').textContent = 'Close';
+    document.getElementById('float-pg-icon').textContent = '✕';
+    floatUpdateLines();
+    document.getElementById('float-pg-editor').focus();
+  } else {
+    panel.classList.remove('visible');
+    btn.classList.remove('open');
+    document.getElementById('float-pg-label').textContent = 'Playground';
+    document.getElementById('float-pg-icon').textContent = '⚡';
+  }
+}
+
+// ── Minimise (collapse to title bar) ─────────────────────────────────────────
+function floatPgMinimise() {
+  const panel = document.getElementById('float-pg-panel');
+  floatMinimised = !floatMinimised;
+  panel.classList.toggle('minimised', floatMinimised);
+  document.getElementById('float-pg-min-btn').textContent = floatMinimised ? '□' : '—';
+  document.getElementById('float-pg-min-btn').title = floatMinimised ? 'Restore' : 'Minimise';
+}
+
+// ── Fullscreen toggle ─────────────────────────────────────────────────────────
+let floatIsFullscreen = false;
+// Remember pre-fullscreen geometry so we can restore it
+let _preFullscreenStyle = {};
+
+function floatPgFullscreen() {
+  const panel  = document.getElementById('float-pg-panel');
+  const fsBtn  = document.getElementById('float-pg-fs-btn');
+  const tbar   = document.getElementById('float-pg-titlebar');
+
+  floatIsFullscreen = !floatIsFullscreen;
+
+  if (floatIsFullscreen) {
+    // Save current geometry
+    _preFullscreenStyle = {
+      top: panel.style.top, left: panel.style.left,
+      width: panel.style.width, height: panel.style.height,
+      bottom: panel.style.bottom, right: panel.style.right,
+    };
+    // Go fullscreen
+    panel.classList.add('fullscreen');
+    if (floatMinimised) floatPgMinimise(); // restore if minimised
+    fsBtn.textContent = '⊡';
+    fsBtn.title = 'Exit fullscreen';
+    tbar.style.cursor = 'default';
+    floatUpdateLines();
+  } else {
+    // Restore saved geometry
+    panel.classList.remove('fullscreen');
+    panel.style.top    = _preFullscreenStyle.top    || '';
+    panel.style.left   = _preFullscreenStyle.left   || '';
+    panel.style.width  = _preFullscreenStyle.width  || '';
+    panel.style.height = _preFullscreenStyle.height || '';
+    panel.style.bottom = _preFullscreenStyle.bottom || '24px';
+    panel.style.right  = _preFullscreenStyle.right  || '18px';
+    fsBtn.textContent = '⛶';
+    fsBtn.title = 'Fullscreen (F11)';
+    tbar.style.cursor = '';
+    floatUpdateLines();
+  }
+}
+
+// F11 shortcut when panel is open
+document.addEventListener('keydown', e => {
+  if (e.key === 'F11' && floatPanelOpen) {
+    e.preventDefault();
+    floatPgFullscreen();
+  }
+  // Escape exits fullscreen
+  if (e.key === 'Escape' && floatIsFullscreen) {
+    floatPgFullscreen();
+  }
+});
+
+// ── Load snippet into float editor ────────────────────────────────────────────
+function floatPgLoadSnippet(key) {
+  if (!key || !PG_SNIPPETS[key]) return;
+  document.getElementById('float-pg-editor').value = PG_SNIPPETS[key];
+  floatUpdateLines();
+  document.getElementById('float-pg-snippet-sel').value = '';
+}
+
+// ── Line numbers ──────────────────────────────────────────────────────────────
+function floatUpdateLines() {
+  const ed = document.getElementById('float-pg-editor');
+  if (!ed) return;
+  const n = ed.value.split('\n').length;
+  document.getElementById('float-pg-line-nums').textContent =
+    Array.from({ length: n }, (_, i) => i + 1).join('\n');
+}
+
+// ── Clear output ──────────────────────────────────────────────────────────────
+function floatPgClearOutput() {
+  document.getElementById('float-pg-output').innerHTML =
+    '<div class="pg-out-hint">Output cleared.</div>';
+  floatRunCount = 0;
+  document.getElementById('float-pg-run-info').textContent = '';
+}
+
+// ── Shared console capture + render ──────────────────────────────────────────
+function captureAndRun(code) {
+  const entries = [];
+  const _log = console.log, _warn = console.warn,
+        _err = console.error, _info = console.info;
+
+  const fmt = (args) => args.map(a => {
+    if (a === null) return 'null';
+    if (a === undefined) return 'undefined';
+    if (typeof a === 'object') { try { return JSON.stringify(a, null, 2); } catch(e) { return String(a); } }
+    return String(a);
+  }).join(' ');
+
+  console.log   = (...a) => entries.push({ type:'log',   text: fmt(a) });
+  console.warn  = (...a) => entries.push({ type:'warn',  text: fmt(a) });
+  console.error = (...a) => entries.push({ type:'error', text: fmt(a) });
+  console.info  = (...a) => entries.push({ type:'info',  text: fmt(a) });
+
+  // Pre-check for syntax errors with a safer parse
+  let caughtErr = null;
+  let isSyntax  = false;
+  try { new Function(code); } catch(e) {
+    if (e instanceof SyntaxError) { caughtErr = e; isSyntax = true; }
+  }
+
+  const t0 = performance.now();
+  if (!isSyntax) {
+    try { eval(code); } catch(e) { caughtErr = e; }
+  }
+  const ms = (performance.now() - t0).toFixed(1);
+
+  console.log = _log; console.warn = _warn; console.error = _err; console.info = _info;
+  return { entries, err: caughtErr, ms, isSyntax };
+}
+
+function renderOutput(outputEl, runNum, now, { entries, err, ms, isSyntax }, code) {
+  // Run header
+  const hdr = document.createElement('div');
+  hdr.className = 'pg-out-run-header';
+  const statusIcon = err ? '<span style="color:#f08090">✕</span>' : '<span style="color:#6dd4dc">✓</span>';
+  hdr.innerHTML = `${statusIcon} <span style="color:#E8B84B">Run #${runNum}</span><span>${now}</span><span class="pg-out-time">${ms}ms</span>`;
+  outputEl.appendChild(hdr);
+
+  // Console lines
+  const icons = { log:'›', warn:'⚠', error:'✕', info:'ℹ' };
+  entries.forEach(e => {
+    const div = document.createElement('div');
+    if (e.type === 'warn') {
+      div.className = 'pg-warn-card';
+      div.innerHTML = `⚠ ${escHtml(e.text)}`;
+    } else {
+      div.className = `pg-out-line pg-out-${e.type}`;
+      div.innerHTML = `<span class="pg-icon">${icons[e.type]||'›'}</span><span style="white-space:pre-wrap">${escHtml(e.text)}</span>`;
+    }
+    outputEl.appendChild(div);
+  });
+
+  // Error card
+  if (err) {
+    const errDiv = document.createElement('div');
+    errDiv.innerHTML = renderErrorCard(err, code);
+    outputEl.appendChild(errDiv);
+  } else if (entries.length === 0) {
+    const ok = document.createElement('div');
+    ok.className = 'pg-out-success';
+    ok.textContent = '✓ Ran successfully — no output. Add console.log() to see values.';
+    outputEl.appendChild(ok);
+  }
+
+  outputEl.scrollTop = outputEl.scrollHeight;
+  return !!err;
+}
+
+// ── Run ───────────────────────────────────────────────────────────────────────
+function floatPgRun() {
+  const code = document.getElementById('float-pg-editor').value.trim();
+  if (!code) return;
+
+  floatRunCount++;
+  const output = document.getElementById('float-pg-output');
+  if (floatRunCount === 1) output.innerHTML = '';
+  const now = new Date().toLocaleTimeString();
+
+  const result = captureAndRun(code);
+  const hasErr = renderOutput(output, floatRunCount, now, result, code);
+
+  const info = document.getElementById('float-pg-run-info');
+  info.textContent = hasErr ? `❌ ${analyzeError(result.err, code).type}` : `✓ run #${floatRunCount}`;
+  info.style.color = hasErr ? '#f08090' : '#6dd4dc';
+}
+
+// ── Ctrl+Enter inside float editor ───────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const ed = document.getElementById('float-pg-editor');
+  if (!ed) return;
+  ed.addEventListener('input', floatUpdateLines);
+  ed.addEventListener('scroll', () => {
+    document.getElementById('float-pg-line-nums').scrollTop = ed.scrollTop;
+  });
+  ed.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = ed.selectionStart;
+      ed.value = ed.value.slice(0, s) + '  ' + ed.value.slice(ed.selectionEnd);
+      ed.selectionStart = ed.selectionEnd = s + 2;
+      floatUpdateLines();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      floatPgRun();
+    }
+  });
+  floatUpdateLines();
+});
+
+// ── Drag panel (move) ─────────────────────────────────────────────────────────
+let _dragState = null;
+function floatPgDragStart(e) {
+  if (e.target.closest('button,select')) return;
+  const panel = document.getElementById('float-pg-panel');
+  const rect  = panel.getBoundingClientRect();
+  // Switch from bottom/right anchoring to top/left so we can move freely
+  panel.style.bottom = 'auto';
+  panel.style.right  = 'auto';
+  panel.style.top    = rect.top + 'px';
+  panel.style.left   = rect.left + 'px';
+  _dragState = { startX: e.clientX, startY: e.clientY, origTop: rect.top, origLeft: rect.left };
+  document.body.style.userSelect = 'none';
+  document.addEventListener('mousemove', _onPanelDrag);
+  document.addEventListener('mouseup',   _onPanelDragEnd, { once: true });
+}
+function _onPanelDrag(e) {
+  if (!_dragState) return;
+  const panel = document.getElementById('float-pg-panel');
+  const dx = e.clientX - _dragState.startX;
+  const dy = e.clientY - _dragState.startY;
+  panel.style.top  = Math.max(0, _dragState.origTop  + dy) + 'px';
+  panel.style.left = Math.max(0, _dragState.origLeft + dx) + 'px';
+}
+function _onPanelDragEnd() {
+  _dragState = null;
+  document.body.style.userSelect = '';
+  document.removeEventListener('mousemove', _onPanelDrag);
+}
+
+// ── Resize panel (corner handle) ──────────────────────────────────────────────
+let _resizeState = null;
+function floatPgResizeStart(e) {
+  e.preventDefault();
+  const panel = document.getElementById('float-pg-panel');
+  const rect  = panel.getBoundingClientRect();
+  _resizeState = { startX: e.clientX, startY: e.clientY, origW: rect.width, origH: rect.height };
+  document.body.style.userSelect = 'none';
+  document.addEventListener('mousemove', _onPanelResize);
+  document.addEventListener('mouseup',   _onPanelResizeEnd, { once: true });
+}
+function _onPanelResize(e) {
+  if (!_resizeState) return;
+  const panel = document.getElementById('float-pg-panel');
+  const w = Math.max(340, _resizeState.origW + (e.clientX - _resizeState.startX));
+  const h = Math.max(260, _resizeState.origH + (e.clientY - _resizeState.startY));
+  panel.style.width  = w + 'px';
+  panel.style.height = h + 'px';
+}
+function _onPanelResizeEnd() {
+  _resizeState = null;
+  document.body.style.userSelect = '';
+  document.removeEventListener('mousemove', _onPanelResize);
+}
+
+// ── Vertical resize (editor vs output) ───────────────────────────────────────
+let _vDragState = null;
+function floatPgVDragStart(e) {
+  e.preventDefault();
+  const edWrap  = document.getElementById('float-pg-editor-wrap');
+  const outWrap = document.getElementById('float-pg-output-wrap');
+  _vDragState = {
+    startY: e.clientY,
+    origEdH:  edWrap.getBoundingClientRect().height,
+    origOutH: outWrap.getBoundingClientRect().height,
+  };
+  document.body.style.userSelect = 'none';
+  document.addEventListener('mousemove', _onVDrag);
+  document.addEventListener('mouseup', _onVDragEnd, { once: true });
+}
+function _onVDrag(e) {
+  if (!_vDragState) return;
+  const dy = e.clientY - _vDragState.startY;
+  const newEdH  = Math.max(60, _vDragState.origEdH  + dy);
+  const newOutH = Math.max(60, _vDragState.origOutH - dy);
+  document.getElementById('float-pg-editor-wrap').style.flex = `0 0 ${newEdH}px`;
+  document.getElementById('float-pg-output-wrap').style.flex = `0 0 ${newOutH}px`;
+}
+function _onVDragEnd() {
+  _vDragState = null;
+  document.body.style.userSelect = '';
+  document.removeEventListener('mousemove', _onVDrag);
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PLAYGROUND
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const PG_SNIPPETS = {
+  blank: `// Write your JavaScript here and press ▶ Run (or Ctrl+Enter)
+
+`,
+
+  variables: `// Variables & Scope
+// Try changing var to let or const and see what happens
+
+const name = 'Spoon Consulting';
+let year = 2026;
+
+console.log(\`Welcome to \${name} — Bootcamp \${year}\`);
+
+// Block scope demo
+{
+  let blockScoped = 'only inside this block';
+  const alsoBlock = 42;
+  console.log(blockScoped, alsoBlock);
+}
+
+// blockScoped doesn't exist here — uncomment to see the error:
+// console.log(blockScoped);
+`,
+
+  'array-methods': `// Array Methods: map, filter, reduce, find
+const consultants = [
+  { name: 'Alice', level: 'Senior', score: 92 },
+  { name: 'Bob',   level: 'Junior', score: 74 },
+  { name: 'Carol', level: 'Senior', score: 88 },
+  { name: 'Dave',  level: 'Junior', score: 81 },
+  { name: 'Eve',   level: 'Senior', score: 95 },
+];
+
+// Get names of senior consultants with score > 90
+const topSeniors = consultants
+  .filter(c => c.level === 'Senior' && c.score > 90)
+  .map(c => c.name);
+console.log('Top seniors:', topSeniors);
+
+// Average score
+const avg = consultants.reduce((sum, c) => sum + c.score, 0) / consultants.length;
+console.log('Average score:', avg.toFixed(1));
+
+// Find first junior
+const firstJunior = consultants.find(c => c.level === 'Junior');
+console.log('First junior:', firstJunior.name);
+`,
+
+  objects: `// Objects & Destructuring
+const project = {
+  name: 'Client Portal',
+  client: 'Acme Corp',
+  team: {
+    lead: 'Alice',
+    members: ['Bob', 'Carol', 'Dave'],
+  },
+  budget: 150000,
+  active: true,
+};
+
+// Destructure with rename and default
+const {
+  name: projectName,
+  client,
+  team: { lead, members },
+  deadline = 'TBD',
+} = project;
+
+console.log(\`Project: \${projectName}\`);
+console.log(\`Client: \${client}\`);
+console.log(\`Lead: \${lead}\`);
+console.log(\`Team: \${members.join(', ')}\`);
+console.log(\`Deadline: \${deadline}\`);
+
+// Enhanced object literal
+const updatedBudget = 160000;
+const updated = { ...project, budget: updatedBudget, phase: 2 };
+console.log('Updated budget:', updated.budget, '| Phase:', updated.phase);
+`,
+
+  'arrow-fn': `// Arrow Functions & Default Parameters
+// Traditional vs arrow function
+function greetOld(name) {
+  return 'Hello, ' + name + '!';
+}
+
+const greet = (name = 'World') => \`Hello, \${name}!\`;
+
+console.log(greetOld('Alice'));
+console.log(greet('Bob'));
+console.log(greet()); // uses default
+
+// Concise transforms with arrow functions
+const prices = [10, 25, 8, 42, 15];
+
+const withTax   = prices.map(p => +(p * 1.07).toFixed(2));
+const affordable = prices.filter(p => p < 20);
+const total      = prices.reduce((sum, p) => sum + p, 0);
+
+console.log('With tax:', withTax);
+console.log('Under $20:', affordable);
+console.log('Total:', total);
+`,
+
+  promise: `// Promises & Async/Await
+// Helper that resolves after a delay
+const delay = (ms, value) =>
+  new Promise(resolve => setTimeout(() => resolve(value), ms));
+
+// Using .then() chain
+delay(50, 'Step 1 complete')
+  .then(msg => {
+    console.log(msg);
+    return delay(50, 'Step 2 complete');
+  })
+  .then(msg => console.log(msg))
+  .catch(err => console.error('Error:', err.message));
+
+// Using async/await (cleaner!)
+const runSteps = async () => {
+  try {
+    const a = await delay(50, 'Async step A');
+    console.log(a);
+    const b = await delay(50, 'Async step B');
+    console.log(b);
+    console.log('All async steps done!');
+  } catch (err) {
+    console.error('Caught:', err.message);
+  }
+};
+
+runSteps();
+`,
+
+  class: `// Classes & Inheritance
+class Shape {
+  constructor(color = 'white') {
+    this.color = color;
+  }
+  area() { return 0; }
+  describe() {
+    return \`A \${this.color} \${this.constructor.name} with area \${this.area().toFixed(2)}\`;
+  }
+}
+
+class Circle extends Shape {
+  constructor(radius, color) {
+    super(color);
+    this.radius = radius;
+  }
+  area() { return Math.PI * this.radius ** 2; }
+}
+
+class Rectangle extends Shape {
+  constructor(width, height, color) {
+    super(color);
+    this.width = width;
+    this.height = height;
+  }
+  area() { return this.width * this.height; }
+}
+
+const shapes = [
+  new Circle(5, 'red'),
+  new Rectangle(4, 6, 'blue'),
+  new Circle(3, 'green'),
+];
+
+shapes.forEach(s => console.log(s.describe()));
+
+const totalArea = shapes.reduce((sum, s) => sum + s.area(), 0);
+console.log(\`Total area: \${totalArea.toFixed(2)}\`);
+`,
+
+  challenge1: `// 🏆 Challenge 1: FizzBuzz with a twist
+// Print numbers 1–30.
+// For multiples of 3 print "Fizz"
+// For multiples of 5 print "Buzz"
+// For multiples of both print "FizzBuzz"
+// For multiples of 7 print "Spoon" instead
+// (Spoon takes priority over Fizz/Buzz)
+
+// Your solution here:
+for (let i = 1; i <= 30; i++) {
+  // replace this line with your logic
+  console.log(i);
+}
+`,
+
+  challenge2: `// 🏆 Challenge 2: Flatten & deduplicate
+// Given the nested arrays below, produce a single
+// sorted array of unique numbers.
+// Hint: look up Array.flat() and Set
+
+const data = [
+  [3, 1, 4, 1],
+  [5, 9, 2, 6],
+  [5, 3, 5, 8],
+  [9, 7, 9, 3],
+];
+
+// Your solution here:
+const result = data; // replace with your logic
+console.log(result);
+// Expected: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+`,
+
+  challenge3: `// 🏆 Challenge 3: Group by
+// Group the employees array by department,
+// then log each department and its members.
+
+const employees = [
+  { name: 'Alice',   dept: 'Engineering' },
+  { name: 'Bob',     dept: 'Design' },
+  { name: 'Carol',   dept: 'Engineering' },
+  { name: 'Dave',    dept: 'Design' },
+  { name: 'Eve',     dept: 'Engineering' },
+  { name: 'Frank',   dept: 'HR' },
+];
+
+// Your solution here (hint: use .reduce()):
+const grouped = {}; // replace with your logic
+console.log(grouped);
+// Expected:
+// { Engineering: ['Alice','Carol','Eve'], Design: ['Bob','Dave'], HR: ['Frank'] }
+`,
+};
+
+let pgRunCount = 0;
+
+// ── Load snippet ──────────────────────────────────────────────────────────────
+function pgLoad(key) {
+  const editor = document.getElementById('pg-editor');
+  editor.value = PG_SNIPPETS[key] || '';
+  pgUpdateLines();
+  editor.focus();
+  document.getElementById('pg-status').textContent = '';
+}
+
+// ── Update line numbers ───────────────────────────────────────────────────────
+function pgUpdateLines() {
+  const editor = document.getElementById('pg-editor');
+  const lines = editor.value.split('\n').length;
+  const nums = document.getElementById('pg-line-nums');
+  nums.textContent = Array.from({ length: lines }, (_, i) => i + 1).join('\n');
+}
+
+// ── Clear editor ─────────────────────────────────────────────────────────────
+function pgClear() {
+  document.getElementById('pg-editor').value = '';
+  pgUpdateLines();
+  document.getElementById('pg-status').textContent = '';
+}
+
+// ── Reset to default ─────────────────────────────────────────────────────────
+function pgReset() { pgLoad('blank'); }
+
+// ── Clear output ─────────────────────────────────────────────────────────────
+function pgClearOutput() {
+  document.getElementById('pg-output').innerHTML =
+    '<div class="pg-out-hint">Output cleared. Press <strong>▶ Run</strong> to run your code.</div>';
+  pgRunCount = 0;
+  document.getElementById('pg-run-count').textContent = '';
+}
+
+// ── Run code ─────────────────────────────────────────────────────────────────
+function pgRun() {
+  const code = document.getElementById('pg-editor').value.trim();
+  if (!code) return;
+
+  pgRunCount++;
+  const output = document.getElementById('pg-output');
+  if (pgRunCount === 1) output.innerHTML = '';
+  const now = new Date().toLocaleTimeString();
+
+  const result = captureAndRun(code);
+  const hasErr = renderOutput(output, pgRunCount, now, result, code);
+
+  const status = document.getElementById('pg-status');
+  if (hasErr) {
+    status.textContent = `❌ ${analyzeError(result.err, code).type}`;
+    status.style.color = '#f08090';
+  } else {
+    status.textContent = '✓ OK';
+    status.style.color = '#6dd4dc';
+  }
+  document.getElementById('pg-run-count').textContent = `${pgRunCount} run${pgRunCount>1?'s':''}`;
+}
+
+function escHtml(s) {
+  return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+// ── Editor: tab key, line numbers, Ctrl+Enter ─────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  const editor = document.getElementById('pg-editor');
+  if (!editor) return;
+
+  // Default content
+  editor.value = PG_SNIPPETS.blank;
+  pgUpdateLines();
+
+  editor.addEventListener('input', pgUpdateLines);
+  editor.addEventListener('scroll', () => {
+    document.getElementById('pg-line-nums').scrollTop = editor.scrollTop;
+  });
+
+  // Tab inserts 2 spaces
+  editor.addEventListener('keydown', e => {
+    if (e.key === 'Tab') {
+      e.preventDefault();
+      const s = editor.selectionStart, end = editor.selectionEnd;
+      editor.value = editor.value.slice(0, s) + '  ' + editor.value.slice(end);
+      editor.selectionStart = editor.selectionEnd = s + 2;
+      pgUpdateLines();
+    }
+    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+      e.preventDefault();
+      pgRun();
+    }
+  });
+});
+
+// ── Drag divider to resize panes ─────────────────────────────────────────────
+(function() {
+  const divider = document.getElementById('pg-divider');
+  if (!divider) return;
+  let dragging = false, startX, startLeftW;
+
+  divider.addEventListener('mousedown', e => {
+    dragging = true; startX = e.clientX;
+    const left = document.getElementById('pg-editor-pane');
+    startLeftW = left.getBoundingClientRect().width;
+    document.body.style.userSelect = 'none';
+    document.body.style.cursor = 'col-resize';
+  });
+
+  document.addEventListener('mousemove', e => {
+    if (!dragging) return;
+    const split = document.getElementById('pg-split');
+    if (!split) return;
+    const totalW = split.getBoundingClientRect().width - 4;
+    const dx = e.clientX - startX;
+    const newLeft = Math.max(200, Math.min(totalW - 200, startLeftW + dx));
+    const newRight = totalW - newLeft;
+    document.getElementById('pg-editor-pane').style.flex = 'none';
+    document.getElementById('pg-editor-pane').style.width = newLeft + 'px';
+    document.getElementById('pg-output-pane').style.flex = 'none';
+    document.getElementById('pg-output-pane').style.width = newRight + 'px';
+  });
+
+  document.addEventListener('mouseup', () => {
+    if (dragging) { dragging = false; document.body.style.userSelect=''; document.body.style.cursor=''; }
+  });
+})();
+</script>
+</body>
+</html>
