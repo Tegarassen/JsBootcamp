@@ -531,7 +531,112 @@
     border-radius: 0 6px 6px 0;
     padding: 5px 10px; margin: 2px 0; font-size: 12px; color: #f0ca60;
   }
+
+  /* SUPABASE PRESENTER SYNC PANEL */
+  .sync-panel {
+    position: fixed;
+    right: 18px;
+    bottom: 18px;
+    z-index: 10000;
+    width: min(280px, calc(100vw - 36px));
+    background: rgba(9, 20, 34, .96);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    box-shadow: 0 18px 45px rgba(0,0,0,.35);
+    color: var(--text);
+    padding: 12px;
+    font-size: 12px;
+    backdrop-filter: blur(12px);
+  }
+  .sync-panel-title {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+    color: var(--accent);
+  }
+  .sync-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+  }
+  .sync-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--danger);
+    box-shadow: 0 0 0 3px rgba(196,69,112,.14);
+  }
+  .sync-dot.connected {
+    background: #34d399;
+    box-shadow: 0 0 0 3px rgba(52,211,153,.16);
+  }
+  .sync-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 8px;
+    color: var(--text-muted);
+  }
+  .sync-row strong {
+    color: var(--text);
+    font-weight: 700;
+  }
+  .sync-follow {
+    justify-content: flex-start;
+    cursor: pointer;
+    user-select: none;
+  }
+  .sync-follow input {
+    accent-color: var(--accent3);
+  }
+  .sync-actions {
+    display: grid;
+    gap: 8px;
+    margin-top: 10px;
+  }
+  .sync-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 800;
+    padding: 8px 10px;
+    text-align: left;
+    transition: border-color .15s, color .15s, opacity .15s;
+  }
+  .sync-btn:hover {
+    border-color: var(--accent3);
+    color: var(--accent3);
+  }
+  .sync-btn:disabled {
+    cursor: not-allowed;
+    opacity: .45;
+  }
+  .sync-reload-message {
+    display: none;
+    margin-top: 10px;
+    border: 1px solid rgba(109,212,220,.25);
+    border-radius: 8px;
+    background: rgba(109,212,220,.08);
+    color: var(--accent3);
+    padding: 8px 10px;
+    font-weight: 800;
+    line-height: 1.4;
+  }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -1765,15 +1870,55 @@ console.log(findLargest(10, 2, 9));  // 10</textarea>
   <div id="float-pg-resize-handle" onmousedown="floatPgResizeStart(event)" title="Drag to resize"></div>
 </div>
 
+<!-- Supabase Realtime presenter synchronization panel.
+     The playground remains local: this panel only syncs slide navigation and reload commands. -->
+<div class="sync-panel" id="sync-panel" aria-live="polite">
+  <div class="sync-panel-title">
+    <span>Presenter Sync</span>
+    <span class="sync-status"><span class="sync-dot" id="sync-dot"></span><span id="sync-status">Connecting</span></span>
+  </div>
+
+  <label class="sync-row sync-follow" id="sync-follow-row">
+    <input type="checkbox" id="sync-follow-presenter">
+    <span>Follow presenter</span>
+  </label>
+
+  <div class="sync-actions" id="sync-presenter-actions" hidden>
+    <button class="sync-btn" type="button" id="sync-force-slide">Force everyone to current slide</button>
+    <button class="sync-btn" type="button" id="sync-force-reload">Force everyone to reload</button>
+  </div>
+
+  <div class="sync-row" id="sync-room-row" hidden>
+    <span>Current room</span>
+    <strong id="sync-room">presentation:jsbootcamp</strong>
+  </div>
+  <div class="sync-row" id="sync-version-row" hidden>
+    <span>Version</span>
+    <strong id="sync-version">1.0.0</strong>
+  </div>
+
+  <div class="sync-reload-message" id="sync-reload-message">
+    Presentation updated...<br>Reloading...
+  </div>
+</div>
+
 <script>
 // ─── STATE ────────────────────────────────────────────────────────────────────
+const PRESENTATION_VERSION = "1.0.0";
+const SUPABASE_URL = "https://qydrsciudjwstwjfjnos.supabase.co";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_0jnzHOAuJQ0xA3RMEPCfiQ_VsRm_4-K";
+const SYNC_ROOM = "presentation:jsbootcamp";
 const ORDER = ['intro','variables','datatypes','strings','arrays','objects','control','loops','functions','spread','promises','classes'];
 const visited = new Set();
+let currentModuleId = 'intro';
 
 function goTo(id) {
+  const mod = document.getElementById('mod-' + id);
+  if (!mod) return;
+
+  currentModuleId = id;
   document.querySelectorAll('.module').forEach(m => m.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
-  const mod = document.getElementById('mod-' + id);
   mod.classList.add('active');
   const navEl = document.querySelector(`[data-module="${id}"]`);
   if (navEl) navEl.classList.add('active');
@@ -1855,6 +2000,170 @@ function answer(el, result, qid) {
 
 // ─── INIT ────────────────────────────────────────────────────────────────────
 markVisited('intro');
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUPABASE REALTIME PRESENTER SYNCHRONIZATION
+// ═══════════════════════════════════════════════════════════════════════════════
+// This section intentionally syncs only presentation-level commands:
+//   1. force-slide: navigate followers to a module id that already exists.
+//   2. force-reload: reload the whole static page after a short message.
+//
+// It never reads, writes, or broadcasts playground code, console output, quiz
+// answers, local progress, editor contents, or any other per-browser learning
+// state. The playground stays completely local until the whole page reloads.
+(function initPresenterSync() {
+  const isPresenter = new URLSearchParams(window.location.search).get('presenter') === '1';
+  const followStorageKey = 'jsbootcamp-follow-presenter';
+  const supabaseFactory = window.supabase && window.supabase.createClient;
+
+  let supabaseClient = null;
+  let syncChannel = null;
+  let reconnectTimer = null;
+
+  const panel = document.getElementById('sync-panel');
+  const dot = document.getElementById('sync-dot');
+  const statusText = document.getElementById('sync-status');
+  const followRow = document.getElementById('sync-follow-row');
+  const followInput = document.getElementById('sync-follow-presenter');
+  const presenterActions = document.getElementById('sync-presenter-actions');
+  const roomRow = document.getElementById('sync-room-row');
+  const versionRow = document.getElementById('sync-version-row');
+  const roomText = document.getElementById('sync-room');
+  const versionText = document.getElementById('sync-version');
+  const forceSlideBtn = document.getElementById('sync-force-slide');
+  const forceReloadBtn = document.getElementById('sync-force-reload');
+  const reloadMessage = document.getElementById('sync-reload-message');
+
+  // If the panel markup is ever removed, fail quietly so the presentation still works.
+  if (!panel || !dot || !statusText) return;
+
+  roomText.textContent = SYNC_ROOM;
+  versionText.textContent = PRESENTATION_VERSION;
+
+  // Presenter mode is enabled only through ?presenter=1. Presenters get command
+  // buttons and room/version metadata; normal learners only see follow/status.
+  if (isPresenter) {
+    followRow.hidden = true;
+    presenterActions.hidden = false;
+    roomRow.hidden = false;
+    versionRow.hidden = false;
+  } else {
+    presenterActions.hidden = true;
+    roomRow.hidden = true;
+    versionRow.hidden = true;
+  }
+
+  // Follow Presenter is a learner-side preference. Store it locally so each
+  // browser can decide whether it wants to obey future force-slide messages.
+  followInput.checked = localStorage.getItem(followStorageKey) !== '0';
+  followInput.addEventListener('change', () => {
+    localStorage.setItem(followStorageKey, followInput.checked ? '1' : '0');
+  });
+
+  function setConnectionStatus(label, connected) {
+    statusText.textContent = label;
+    dot.classList.toggle('connected', connected);
+    forceSlideBtn.disabled = !connected;
+    forceReloadBtn.disabled = !connected;
+  }
+
+  // Validate incoming module ids before navigating. This protects local browser
+  // state from malformed messages and keeps received messages from throwing.
+  function moduleExists(moduleId) {
+    return Boolean(moduleId && document.getElementById('mod-' + moduleId));
+  }
+
+  // Broadcast helpers are used only by presenter button clicks. goTo(id) never
+  // broadcasts, so receiving force-slide cannot create a feedback loop.
+  function broadcastForceSlide() {
+    if (!syncChannel) return;
+    syncChannel.send({
+      type: 'broadcast',
+      event: 'force-slide',
+      payload: {
+        moduleId: currentModuleId,
+        timestamp: Date.now()
+      }
+    });
+  }
+
+  function broadcastForceReload() {
+    if (!syncChannel) return;
+    syncChannel.send({
+      type: 'broadcast',
+      event: 'force-reload',
+      payload: {
+        timestamp: Date.now()
+      }
+    });
+  }
+
+  // A forced reload is intentionally a full page reload. There is no special
+  // playground reset path; any local playground content remains untouched until
+  // window.location.reload() runs.
+  function reloadAfterNotice() {
+    reloadMessage.style.display = 'block';
+    window.setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  }
+
+  function scheduleReconnect() {
+    window.clearTimeout(reconnectTimer);
+    reconnectTimer = window.setTimeout(connectRealtime, 1000);
+  }
+
+  function connectRealtime() {
+    window.clearTimeout(reconnectTimer);
+
+    if (!supabaseFactory) {
+      setConnectionStatus('CDN unavailable', false);
+      scheduleReconnect();
+      return;
+    }
+
+    if (!supabaseClient) {
+      supabaseClient = supabaseFactory(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+    }
+
+    if (syncChannel) {
+      supabaseClient.removeChannel(syncChannel);
+      syncChannel = null;
+    }
+
+    setConnectionStatus('Connecting', false);
+
+    syncChannel = supabaseClient
+      .channel(SYNC_ROOM)
+      .on('broadcast', { event: 'force-slide' }, ({ payload }) => {
+        const moduleId = payload && payload.moduleId;
+        if (!followInput.checked || !moduleExists(moduleId)) return;
+        goTo(moduleId);
+      })
+      .on('broadcast', { event: 'force-reload' }, () => {
+        reloadAfterNotice();
+      })
+      .subscribe((status) => {
+        if (status === 'SUBSCRIBED') {
+          setConnectionStatus('Connected', true);
+          return;
+        }
+
+        if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT' || status === 'CLOSED') {
+          setConnectionStatus('Reconnecting', false);
+          scheduleReconnect();
+          return;
+        }
+
+        setConnectionStatus(status || 'Connecting', false);
+      });
+  }
+
+  forceSlideBtn.addEventListener('click', broadcastForceSlide);
+  forceReloadBtn.addEventListener('click', broadcastForceReload);
+
+  connectRealtime();
+})();
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // FLOATING PLAYGROUND
